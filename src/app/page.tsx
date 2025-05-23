@@ -20,6 +20,7 @@ function formatRemainingMoves(moves: string | string[]): string {
   return moveList.join(' ');
 }
 
+// Force rebuild: 2025-05-23
 export default function HomePage() {
   const [image, setImage] = useState<File | null>(null);
   const [error, setError] = useState('');
