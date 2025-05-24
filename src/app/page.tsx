@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
-import PositionSavePopup from './components/PositionSavePopup';
+import PositionSaveModal from './components/PositionSaveModal';
 
 function formatPGNMoves(moves: string | string[]): string {
   if (!moves) return '';
@@ -48,30 +48,46 @@ export default function HomePage() {
 
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
 
-  // Button handlers
-  const handlePositionSave = async (positionName: string, notes: string) => {
+  const handlePositionSave = async (positionName: string, notes: string, turn: string) => {
     try {
-      const response = await fetch('/api/save-position', {
+      const token = localStorage.getItem('id_token'); // 🔐 Cognito token
+  
+      if (!token) {
+        setError('User not authenticated');
+        return;
+      }
+  
+      const response = await fetch('https://sjnpwhxwms.us-east-1.awsapprunner.com/api/Position/SavePosition', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
         body: JSON.stringify({
+          name: positionName,
           fen: lastValidFEN,
-          blackPlayer: playerInfo.blackPlayer,
-          whitePlayer: playerInfo.whitePlayer,
-          blackRating: playerInfo.blackRating,
-          whiteRating: playerInfo.whiteRating,
-          moves: editFields[0],
-          positionName,
-          notes
+          whoseTurn: "Black",
+          notes: notes
         })
       });
+  
+      // Check if response is not OK before parsing
+      if (!response.ok) {
+        const errorText = await response.text(); // Avoid trying to parse JSON if it's HTML
+        throw new Error(errorText || 'Failed to save position');
+      }
+  
       const result = await response.json();
-      setError(result.error || 'Position saved successfully');
-    } catch (err) {
-      console.error('Error saving position:', err);
-      setError('Failed to save position');
+      console.log('✅ Saved position:', result);
+  
+      setError('Position saved successfully'); // Or setSuccess()
+    } catch (err: any) {
+      console.error('❌ Error saving position:', err);
+      setError(err.message || 'Failed to save position');
     }
   };
+  
+  
 
   const handleSavePosition = () => {
     setIsSaveModalOpen(true);
@@ -379,16 +395,17 @@ export default function HomePage() {
         </div>
       </div>
       <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '4rem', width: '100%' }}>
-        <button onClick={handleSavePosition} style={buttonStyle}>Save Position</button>
         <button onClick={handleSharePosition} style={buttonStyle}>Share Position</button>
         <button onClick={handleShareGame} style={buttonStyle}>Share Game</button>
         <button onClick={handleOtherDetails} style={buttonStyle}>Other Details</button>
       </div>
+      <button onClick={handleSavePosition} style={buttonStyle} className="fixed bottom-4 right-4 z-50">Save Position</button>
       {isSaveModalOpen && (
-        <PositionSavePopup
+        <PositionSaveModal
+          isOpen={true}
           onClose={() => setIsSaveModalOpen(false)}
+          currentFEN={lastValidFEN}
           onSave={handlePositionSave}
-          fen={lastValidFEN}
         />
       )}
     </main>

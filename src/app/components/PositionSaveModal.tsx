@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { Chess } from 'chess.js';
 
 interface PositionSaveModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentFEN: string;
-  onSave: (positionName: string, notes: string) => void;
+  onSave: (positionName: string, notes: string, turn: string) => void;
 }
 
 export default function PositionSaveModal({ 
@@ -19,18 +20,52 @@ export default function PositionSaveModal({
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
 
+  // Validate FEN and determine turn
+  const validateFEN = (fen: string): { isValid: boolean; turn: string; error: string } => {
+    try {
+      const chess = new Chess(fen);
+      return {
+        isValid: true,
+        turn: chess.turn() === 'w' ? 'White' : 'Black',
+        error: ''
+      };
+    } catch {
+      return {
+        isValid: false,
+        turn: '',
+        error: 'Invalid board position. Please make sure your moves are correct.'
+      };
+    }
+  };
+
+  const { isValid, turn, error: fenError } = validateFEN(currentFEN);
+
+  useEffect(() => {
+    if (!isValid) {
+      setError(fenError);
+    } else {
+      setError('');
+    }
+  }, [isValid, fenError]);
+
   const handleSubmit = () => {
     if (!positionName.trim()) {
       setError('Please enter a position name');
       return;
     }
-    onSave(positionName, notes);
+
+    if (!isValid) {
+      setError('Invalid board position. Please make sure your moves are correct.');
+      return;
+    }
+
+    onSave(positionName, notes, turn);
     onClose();
-  };
+  }
 
   return (
-    isOpen && (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+    isOpen ? (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div className="bg-white rounded-lg p-6 max-w-md w-full">
           <h2 className="text-xl font-bold mb-4">Save Position</h2>
           
@@ -53,6 +88,16 @@ export default function PositionSaveModal({
                 value={currentFEN}
                 readOnly
                 className="w-full px-3 py-2 border rounded-md bg-gray-50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Whose Turn</label>
+              <input
+                type="text"
+                value={turn || 'Invalid FEN'}
+                readOnly
+                className={`w-full px-3 py-2 border rounded-md ${isValid ? 'bg-gray-50' : 'bg-red-50'}`}
               />
             </div>
 
@@ -88,6 +133,6 @@ export default function PositionSaveModal({
           </div>
         </div>
       </div>
-    )
+    ) : null
   );
 }
