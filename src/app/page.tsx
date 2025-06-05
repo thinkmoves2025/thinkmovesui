@@ -1,10 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import PositionSaveModal from './components/PositionSaveModal';
+import GameSaveModal from './components/GameSaveModal';
+import axios from 'axios';
+
 
 function formatPGNMoves(moves: string | string[]): string {
   if (!moves) return '';
@@ -24,75 +27,94 @@ function formatRemainingMoves(moves: string | string[]): string {
 export default function HomePage() {
   const [image, setImage] = useState<File | null>(null);
   const [error, setError] = useState('');
-  const [editFields, setEditFields] = useState<string[]>(['', '']);
+  const [editFields, setEditFields] = useState(['', '']);
   const [loading, setLoading] = useState(false);
-
-
-  const [lastValidFEN, setLastValidFEN] = useState<string>('start');
+  const [lastValidFEN, setLastValidFEN] = useState('start');
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
-  const [moveHistory, setMoveHistory] = useState<string[]>([]);
+  const [moveHistory, setMoveHistory] = useState<string[]>([new Chess().fen()]);
 
-  type PlayerInfo = {
-    blackPlayer: string;
-    whitePlayer: string;
-    blackRating: string;
-    whiteRating: string;
-  };
 
-  const [playerInfo, setPlayerInfo] = useState<PlayerInfo>({
+  const isValidFEN = (fen: string) => fen.split(' ').length === 6;
+
+  const chess = new Chess(
+    lastValidFEN && isValidFEN(lastValidFEN) ? lastValidFEN : undefined
+  );
+  const [gameInfo, setGameInfo] = useState({
+    correctPGN: '',
+    remainingPGN: '',
     blackPlayer: '',
     whitePlayer: '',
     blackRating: '',
-    whiteRating: ''
+    whiteRating: '',
+    board: '',
+    round: ''
   });
 
-  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  useEffect(() => {
+    const storedFEN = localStorage.getItem('storedFEN');
+    const correctPGN = localStorage.getItem('correctMoves');
+    const remainingPGN = localStorage.getItem('remainingMoves');
 
-  const handlePositionSave = async (positionName: string, notes: string, turn: string) => {
-    try {
-      const token = localStorage.getItem('id_token'); // 🔐 Cognito token
+    const blackPlayer = localStorage.getItem('blackPlayer');
+    const whitePlayer = localStorage.getItem('whitePlayer');
+    const blackRating = localStorage.getItem('blackRating');
+    const whiteRating = localStorage.getItem('whiteRating');
+    
+    const round = localStorage.getItem('round');
+    const board = localStorage.getItem('board');
   
-      if (!token) {
-        setError('User not authenticated');
-        return;
-      }
-  
-      const response = await fetch('https://sjnpwhxwms.us-east-1.awsapprunner.com/api/Position/SavePosition', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: positionName,
-          fen: lastValidFEN,
-          whoseTurn: "Black",
-          notes: notes
-        })
-      });
-  
-      // Check if response is not OK before parsing
-      if (!response.ok) {
-        const errorText = await response.text(); // Avoid trying to parse JSON if it's HTML
-        throw new Error(errorText || 'Failed to save position');
-      }
-  
-      const result = await response.json();
-      console.log('✅ Saved position:', result);
-  
-      setError('Position saved successfully'); // Or setSuccess()
-    } catch (err: any) {
-      console.error('❌ Error saving position:', err);
-      setError(err.message || 'Failed to save position');
+    if (storedFEN) setLastValidFEN(storedFEN);
+    if (correctPGN || remainingPGN) setEditFields([correctPGN || '', remainingPGN || '']);
+
+    if (correctPGN || remainingPGN) {
+      setEditFields([correctPGN || '', remainingPGN || '']);
     }
-  };
+    
+    if (
+      blackPlayer || whitePlayer || blackRating || whiteRating || board || round
+    ) {
+      setGameInfo({
+        blackPlayer: blackPlayer || '',
+        whitePlayer: whitePlayer || '',
+        blackRating: blackRating || '',
+        whiteRating: whiteRating || '',
+        board: board || '',
+        round: round || '',
+        correctPGN: '',
+        remainingPGN: ''
+      });
+    }
+    
+  }, []);
+  
+  useEffect(() => {
+    localStorage.setItem('storedFEN', lastValidFEN);
+    localStorage.setItem('correctMoves', editFields[0]);
+    localStorage.setItem('remainingMoves', editFields[1]);
+  
+    localStorage.setItem('blackPlayer', gameInfo.blackPlayer);
+    localStorage.setItem('whitePlayer', gameInfo.whitePlayer);
+    localStorage.setItem('blackRating', gameInfo.blackRating);
+    localStorage.setItem('whiteRating', gameInfo.whiteRating);
+    localStorage.setItem('board', gameInfo.board);
+    localStorage.setItem('round', gameInfo.round);
+  }, [lastValidFEN, editFields, gameInfo]);
   
   
 
-  const handleSavePosition = () => {
-    setIsSaveModalOpen(true);
+  const [isPositionSaveModalOpen, setIsPositionSaveModalOpen] = useState(false); 
+  const [showGameModal, setShowGameModal] = useState(false);
+
+
+  const handleSavePositionClick = () => {
+    setIsPositionSaveModalOpen(true); // open modal
   };
 
+    const handleSaveGameClick = () => {
+    setShowGameModal(true); // open modal
+  };
+
+  /*
   const handleSharePosition = async () => {
     try {
       const url = new URL(window.location.href);
@@ -105,6 +127,7 @@ export default function HomePage() {
     }
   };
 
+  
   const handleShareGame = async () => {
     try {
       const url = new URL(window.location.href);
@@ -115,12 +138,7 @@ export default function HomePage() {
       console.error('Error sharing game:', err);
       setError('Failed to share game');
     }
-  };
-
-  const handleOtherDetails = () => {
-    // Add your implementation for other details here
-    setError('Other details functionality coming soon');
-  };
+  };*/
 
   const updateMoveHistoryFromPGN = (pgn: string) => {
     const chess = new Chess();
@@ -133,9 +151,11 @@ export default function HomePage() {
       historyFENs.push(chess.fen());
     });
     setMoveHistory(historyFENs);
+
     setCurrentMoveIndex(0);
     setLastValidFEN(historyFENs[0]);
   };
+  
 
   const handleMoveNavigation = (action: 'start' | 'prev' | 'next' | 'end') => {
     setError('');
@@ -178,13 +198,13 @@ export default function HomePage() {
       }
 
       // Log parsed game for debugging
-      console.log('Parsed Game Sent to Lambda:', thinkmovessScannedGame);
+      //console.log('Parsed Game Sent to Lambda:', thinkmovessScannedGame);
 
       const payload = {
         body: JSON.stringify({ ThinkMoveScannedGame: thinkmovessScannedGame })
       };
 
-      console.log("✅ Payload to Lambda:", payload);
+      //console.log("✅ Payload to Lambda:", payload);
 
       // AWS Lambda integration
       const aws_accessKey = process.env.NEXT_PUBLIC_AWS_ACCESS_KEY_ID!;
@@ -218,7 +238,7 @@ export default function HomePage() {
       let result;
       try {
         result = JSON.parse(resultString);
-        console.log("✅ Level 1 Response:", result);
+        //console.log("✅ Level 1 Response:", result);
       } catch (e) {
         console.error("❌ Error parsing resultString:", e);
         throw new Error("Failed to parse resultString into JSON");
@@ -231,7 +251,7 @@ export default function HomePage() {
       let parsedBody;
       try {
         parsedBody = JSON.parse(result.body);
-        console.log("✅ Parsed Body:", parsedBody);
+        //console.log("✅ Parsed Body:", parsedBody);
       } catch (e) {
         console.error("❌ Error parsing result.body:", e);
         throw new Error("Failed to parse result.body into object");
@@ -242,8 +262,8 @@ export default function HomePage() {
         const correctMoves = parsedBody.CorrectMovesPGN.join("\n");
         const remainingMoves = parsedBody.RemainingPGN.join("\n");
         
-        console.log('✅ Correct Moves to set:', correctMoves);
-        console.log('✅ Remaining Moves to set:', remainingMoves);
+        //console.log('✅ Correct Moves to set:', correctMoves);
+        //console.log('✅ Remaining Moves to set:', remainingMoves);
         
         setEditFields([correctMoves, remainingMoves]);
         updateMoveHistoryFromPGN(correctMoves);
@@ -261,9 +281,6 @@ export default function HomePage() {
     }
   };
   
-  
-  
-
   const handleSubmit = async () => {
     if (!image) return setError('Please select an image first.');
   
@@ -279,28 +296,50 @@ export default function HomePage() {
 
       // Parse the deeply nested response
       const resultString = await response.text();
-      console.log('Raw Response:', resultString);
 
       const level1 = JSON.parse(resultString);
-      console.log('Level 1 Response:', level1);
 
       const level2 = JSON.parse(level1.response);
-      console.log('Level 2 Response:', level2);
 
       const parsedBody = JSON.parse(level2.body); // Final usable object
-      console.log("Parsed Body:", parsedBody);
 
       // Extract and format values
       const correctMoves = formatPGNMoves(parsedBody.CorrectMovesPGN.join(' ') || '');
       const remainingMoves = formatRemainingMoves(parsedBody.RemainingPGN.join(' ') || '');
       const lastValidFEN = parsedBody.LastValidFEN || 'start';
       const error = parsedBody.Error || 'No Errors';
+      
+      const metadataString = parsedBody.GameMetaDataJSON;
+      const metadataParsed = JSON.parse(metadataString);
+      const gameMetadata = metadataParsed.GameMetadata;
 
-      console.log('Final Values:');
-      console.log('Correct Moves:', correctMoves);
-      console.log('Remaining Moves:', remainingMoves);
-      console.log('Last Valid FEN:', lastValidFEN);
-      console.log('Error:', error);
+      const blackRating = gameMetadata.BlackRating;
+      const whiteRating = gameMetadata.WhiteRating;
+      const round = gameMetadata.Round;
+      const board = gameMetadata.Board;
+
+      setGameInfo(prev => ({
+        ...prev,
+        blackPlayer: gameMetadata.BlackPlayer || '',
+        whitePlayer: gameMetadata.WhitePlayer || '',
+        blackRating: gameMetadata.BlackRating || '',
+        whiteRating: gameMetadata.WhiteRating || '',
+        board: gameMetadata.Board || '',
+        round: gameMetadata.Round || ''
+      }));
+      
+
+
+      //console.log('Final Values:');
+      //console.log('Correct Moves:', correctMoves);
+      //console.log('Remaining Moves:', remainingMoves);
+      //console.log('Last Valid FEN:', lastValidFEN);
+
+      console.log('blackRating:', blackRating);
+      console.log('whiteRating:', whiteRating);
+      console.log('round:', round);
+      console.log('board:', board);
+
 
       setEditFields([correctMoves, remainingMoves]);
       updateMoveHistoryFromPGN(correctMoves);
@@ -317,98 +356,263 @@ export default function HomePage() {
   
 
   return (
-    <main style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2rem', minHeight: '100vh' }}>
-      <input type="file" accept="image/*" onChange={(e) => e.target.files && setImage(e.target.files[0])} />
-      <button onClick={handleSubmit} disabled={loading} style={buttonStyle}>{loading ? 'Processing...' : 'Submit Image'}</button>
-      <div style={{ display: 'flex', marginTop: '2rem', gap: '2rem', alignItems: 'flex-start' }}>
+    <>
+<input
+  type="file"
+  accept="image/*"
+  multiple
+  onChange={(e) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setImage(e.target.files[0]); // Only taking one — update this if needed
+    }
+  }}
+/>
+
+
+    <button onClick={handleSubmit} disabled={loading} style={buttonStyle}>{loading ? 'Processing...' : 'Submit Image'}</button>
+    <main
+  style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    padding: '3rem 2rem',
+    minHeight: '100vh',
+    backgroundColor: '#f9f9f9',
+  }}
+>
+  <div
+    style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      alignItems: 'flex-start',
+      gap: '2rem',
+      width: '100%',
+      maxWidth: '1400px',
+    }}
+  >
+    {/* Left: Chessboard and navigation */}
+    <div style={{ flex: 1, minWidth: '300px' }}>
+      <Chessboard boardWidth={600} position={lastValidFEN || 'start'} />
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '1rem',
+          marginTop: '1rem',
+        }}
+      >
+        <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('start')}>⏮</button>
+        <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('prev')}>⏪</button>
+        <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('next')}>⏩</button>
+        <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('end')}>⏭</button>
+      </div>
+    </div>
+
+    {/* Right: Text areas and player info */}
+    <div
+      style={{
+        flex: 1,
+        minWidth: '300px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '2rem',
+      }}
+    >
+      <div style={{ display: 'flex', gap: '1rem' }}>
         <div style={{ flex: 1 }}>
-          <Chessboard boardWidth={600} position={lastValidFEN || 'start'} />
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '1rem' }}>
-            <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('start')}>⏮</button>
-            <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('prev')}>⏪</button>
-            <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('next')}>⏩</button>
-            <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('end')}>⏭</button>
-          </div>
+          <label>Correct Moves</label>
+          <textarea
+            value={editFields[0] || ''}
+            onChange={(e) => setEditFields([e.target.value, editFields[1] || ''])}
+            style={{
+              width: '100%',
+              height: '300px',
+              padding: '10px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              backgroundColor: '#fff',
+              fontSize: '0.9rem',
+            }}
+          />
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', maxWidth: '800px' }}>
-          <div style={{ display: 'flex', flexDirection: 'row', gap: '2rem' }}>
-            <div style={{ flex: 1 }}>
-              <label style={{ marginBottom: '4px' }}>Correct Moves</label>
-              <textarea 
-                key="correct-moves"
-                value={editFields[0] || ''} 
-                onChange={e => setEditFields([e.target.value, editFields[1] || ''])} 
-                style={{ width: '100%', height: '300px', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-              />
-            </div>
-            <div style={{ flex: 1 }}>
-              <label style={{ marginBottom: '4px' }}>Remaining Moves</label>
-              <textarea 
-                key="remaining-moves"
-                value={editFields[1] || ''} 
-                onChange={e => setEditFields([editFields[0] || '', e.target.value])} 
-                style={{ width: '100%', height: '300px', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-              />
-            </div>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-              <div>
-                <label style={{ marginBottom: '4px' }}>Black Player</label>
-                <input 
-                  value={playerInfo.blackPlayer} 
-                  onChange={e => setPlayerInfo(prev => ({ ...prev, blackPlayer: e.target.value }))} 
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
-              </div>
-              <div>
-                <label style={{ marginBottom: '4px' }}>Black Rating</label>
-                <input 
-                  value={playerInfo.blackRating} 
-                  onChange={e => setPlayerInfo(prev => ({ ...prev, blackRating: e.target.value }))} 
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
-              </div>
-              <div>
-                <label style={{ marginBottom: '4px' }}>White Player</label>
-                <input 
-                  value={playerInfo.whitePlayer} 
-                  onChange={e => setPlayerInfo(prev => ({ ...prev, whitePlayer: e.target.value }))} 
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
-              </div>
-              <div>
-                <label style={{ marginBottom: '4px' }}>White Rating</label>
-                <input 
-                  value={playerInfo.whiteRating} 
-                  onChange={e => setPlayerInfo(prev => ({ ...prev, whiteRating: e.target.value }))} 
-                  style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ddd' }}
-                />
-              </div>
-            </div>
-            <div>
-              <label style={{ marginBottom: '4px' }}>Error</label>
-              <div style={{ padding: '8px', backgroundColor: '#eee', borderRadius: '4px' }}>{error || 'No Errors'}</div>
-              <button onClick={handleRecheck} disabled={loading} style={{ ...secondaryButton, marginTop: '0.5rem' }}>Recheck</button>
-            </div>
-          </div>
+        <div style={{ flex: 1 }}>
+          <label>Remaining Moves</label>
+          <textarea
+            value={editFields[1] || ''}
+            onChange={(e) => setEditFields([editFields[0] || '', e.target.value])}
+            style={{
+              width: '100%',
+              height: '300px',
+              padding: '10px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              backgroundColor: '#fff',
+              fontSize: '0.9rem',
+            }}
+          />
         </div>
       </div>
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginTop: '4rem', width: '100%' }}>
-        <button onClick={handleSharePosition} style={buttonStyle}>Share Position</button>
-        <button onClick={handleShareGame} style={buttonStyle}>Share Game</button>
-        <button onClick={handleOtherDetails} style={buttonStyle}>Other Details</button>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        <div>
+          <label>Black Player</label>
+          <input
+            value={gameInfo.blackPlayer}
+            onChange={(e) => setGameInfo(prev => ({ ...prev, blackPlayer: e.target.value }))}
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label>Black Rating</label>
+          <input
+            value={gameInfo.blackRating}
+            onChange={(e) => setGameInfo(prev => ({ ...prev, blackRating: e.target.value }))}
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label>White Player</label>
+          <input
+            value={gameInfo.whitePlayer}
+            onChange={(e) => setGameInfo(prev => ({ ...prev, whitePlayer: e.target.value }))}
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label>White Rating</label>
+          <input
+            value={gameInfo.whiteRating}
+            onChange={(e) => setGameInfo(prev => ({ ...prev, whiteRating: e.target.value }))}
+            style={inputStyle}
+          />
+        </div>
+
+
+        <div>
+          <label>Board</label>
+          <input
+            value={gameInfo.board}
+            onChange={(e) => setGameInfo(prev => ({ ...prev, board: e.target.value }))}
+            style={inputStyle}
+          />
+        </div>
+        <div>
+          <label>Round</label>
+          <input
+            value={gameInfo.round}
+            onChange={(e) => setGameInfo(prev => ({ ...prev, round: e.target.value }))}
+            style={inputStyle}
+          />
+        </div>
+
+
+
       </div>
-      <button onClick={handleSavePosition} style={buttonStyle} className="fixed bottom-4 right-4 z-50">Save Position</button>
-      {isSaveModalOpen && (
-        <PositionSaveModal
-          isOpen={true}
-          onClose={() => setIsSaveModalOpen(false)}
-          currentFEN={lastValidFEN}
-          onSave={handlePositionSave}
-        />
-      )}
-    </main>
+
+      <div>
+        <label>Error</label>
+        <div
+          style={{
+            padding: '10px',
+            backgroundColor: '#eee',
+            borderRadius: '6px',
+            minHeight: '40px',
+          }}
+        >
+          {error || 'No Errors'}
+        </div>
+        <button
+          onClick={handleRecheck}
+          disabled={loading}
+          style={{ ...secondaryButton, marginTop: '0.75rem' }}
+        >
+          Recheck
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {/* Bottom: Action buttons */}
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'center',
+      flexWrap: 'wrap',
+      gap: '1rem',
+      marginTop: '4rem',
+      width: '100%',
+    }}
+  >
+{/*
+  <button onClick={handleSharePosition} style={buttonStyle}>Share Position</button>
+  <button onClick={handleShareGame} style={buttonStyle}>Share Game</button>
+*/}
+
+    <button onClick={handleSavePositionClick} style={buttonStyle}>Save Position</button>
+    <button onClick={handleSaveGameClick} style={buttonStyle}>Save Game</button>
+  </div>
+</main>
+
+    {isPositionSaveModalOpen && (
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+        <PositionSaveModal         
+            onClose={() => setIsPositionSaveModalOpen(false)}
+            currentFEN={lastValidFEN}         
+            whosTurn={chess.turn() === 'w' ? 'White' : 'Black'}
+            
+            onSave={async (name, notes, whosTurn) => {
+              const token = localStorage.getItem('id_token');
+              if (!token) {
+                alert('Not logged in!');
+                return;
+              }
+                         
+              whosTurn = chess.turn() === 'w' ? 'White' : 'Black';
+              const payload = {               
+                name,
+                notes,
+                whosTurn,
+                fen: lastValidFEN,
+              };
+            
+              try {
+                await axios.post(
+                  'https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Position/SavePosition',
+                  payload,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${token}`,
+                    },
+                  }
+                );
+                alert('Position saved!');
+                setIsPositionSaveModalOpen(false);
+              } catch (err) {
+                console.error('Save failed:', err);
+                alert('Error saving position');
+              }
+            }}
+                    />
+      </div>
+    )}
+
+    {showGameModal && (
+  <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+    <GameSaveModal
+  onClose={() => setShowGameModal(false)}
+  imageFile={image}
+  gameInfo={{
+    ...gameInfo,
+    correctPGN: editFields[0],
+    remainingPGN: editFields[1]
+  }}
+/>
+
+  </div>
+)}
+
+    </>
   );
 
 }
@@ -428,4 +632,13 @@ const secondaryButton = {
   ...buttonStyle,
   backgroundColor: '#ccc',
   color: '#333'
+};
+
+const inputStyle = {
+  width: '100%',
+  padding: '10px',
+  borderRadius: '6px',
+  border: '1px solid #ccc',
+  backgroundColor: '#fff',
+  fontSize: '0.9rem',
 };
