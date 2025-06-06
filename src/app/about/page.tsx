@@ -88,7 +88,7 @@ export default function AboutPage() {
   </ul>
 </div>
 
-          <div className="max-w-2xl mx-auto px-4 py-10 font-sans">
+<div className="max-w-2xl mx-auto px-4 py-10 font-sans">
 
   {/* Header */}
   <h1 className="text-3xl font-bold text-gray-800 mb-6">Contribute to ThinkMoves</h1>
@@ -179,20 +179,6 @@ export default function AboutPage() {
   </div>
 </div>
 
-
-          {/* Upcoming Features Section */}
-<div className="mt-10 space-y-4 bg-white shadow-md rounded-lg p-6 border border-gray-200">
-  <h2 className="text-2xl font-semibold text-gray-800 mb-2">🚀 Upcoming Things</h2>
-  <ul className="list-disc list-inside text-gray-700 space-y-2 text-base">
-    <li><strong>Auto-Suggestion for Invalid Moves:</strong> Get clickable AI suggestions to fix incorrect moves.</li>
-    <li><strong>Revisit Saved Positions & Games:</strong> Analyze your saved games anytime.</li>
-    <li><strong>Community Leaderboard:</strong> Track contributions and climb the ranks.</li>
-    <li><strong>Share Games and Positions:</strong> Easily share your games with friends.</li>
-    <li><strong>Multi-Language Support (Planned):</strong> Explore ThinkMoves in your regional language.</li>
-    <li><strong>Profile Page Enhancements:</strong> View your activity, saved content, and preferences.</li>
-    <li><strong>Add Friends Feature (Planned):</strong> Connect with other players on the platform.</li>
-  </ul>
-</div>
         </div>
       ) : (
         <p className="text-lg text-red-600">Please log in to contribute.</p>
