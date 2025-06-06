@@ -127,6 +127,13 @@ export default function ContributePage() {
         <p className="text-lg text-red-600">Please log in to contribute.</p>
       )}
     </div>
+    //Name the page as Information Hub / About
+    //try to change from Contribute Page to About/Information Page  
+    //Write More details about contribute saction
+//Option to download images of ChessGrow
+//Example Chess Score Sheets download
+
+
 
     
     

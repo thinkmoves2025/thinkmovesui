@@ -42,7 +42,7 @@ export default function Navbar() {
         <li style={{ margin: '0 15px' }}><Link href="/">ThinkMoves</Link></li>
         <li style={{ margin: '0 15px' }}><Link href="/games">Games</Link></li>
         <li style={{ margin: '0 15px' }}><Link href="/position">Position</Link></li>
-        <li style={{ margin: '0 15px' }}><Link href="/contribute">Contribute</Link></li>
+        <li style={{ margin: '0 15px' }}><Link href="/about">About</Link></li>
         <li style={{ margin: '0 15px' }}><Link href="/profile">Profile</Link></li>
       </ul>
     </nav>
