@@ -98,6 +98,17 @@ export default function ContributePage() {
             />
           </div>
 
+
+          {/* Submit Button (inactive) */}
+          <div>
+            <button
+                    onClick={handleSubmit}
+    className="bg-blue-600 text-white px-5 py-2 rounded-md text-base hover:bg-blue-700 transition"
+  >
+    Submit
+  </button>
+</div>
+
           {/* Upcoming Features Section */}
 <div className="mt-10 space-y-4 bg-white shadow-md rounded-lg p-6 border border-gray-200">
   <h2 className="text-2xl font-semibold text-gray-800 mb-2">🚀 Upcoming Things</h2>
@@ -110,17 +121,6 @@ export default function ContributePage() {
     <li><strong>Profile Page Enhancements:</strong> View your activity, saved content, and preferences.</li>
     <li><strong>Add Friends Feature (Planned):</strong> Connect with other players on the platform.</li>
   </ul>
-</div>
-
-
-          {/* Submit Button (inactive) */}
-          <div>
-            <button
-                    onClick={handleSubmit}
-    className="bg-blue-600 text-white px-5 py-2 rounded-md text-base hover:bg-blue-700 transition"
-  >
-    Submit
-  </button>
 </div>
         </div>
       ) : (
