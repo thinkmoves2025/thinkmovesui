@@ -32,6 +32,8 @@ export default function HomePage() {
   const [lastValidFEN, setLastValidFEN] = useState('start');
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   const [moveHistory, setMoveHistory] = useState<string[]>([new Chess().fen()]);
+  ///const [notes, setNotes] = useState('');
+
 
 
   const isValidFEN = (fen: string) => fen.split(' ').length === 6;
@@ -47,7 +49,8 @@ export default function HomePage() {
     blackRating: '',
     whiteRating: '',
     board: '',
-    round: ''
+    round: '',
+    notes: ''
   });
 
   useEffect(() => {
@@ -62,6 +65,7 @@ export default function HomePage() {
     
     const round = localStorage.getItem('round');
     const board = localStorage.getItem('board');
+    const notes = localStorage.getItem('notes');
   
     if (storedFEN) setLastValidFEN(storedFEN);
     if (correctPGN || remainingPGN) setEditFields([correctPGN || '', remainingPGN || '']);
@@ -71,7 +75,7 @@ export default function HomePage() {
     }
     
     if (
-      blackPlayer || whitePlayer || blackRating || whiteRating || board || round
+      blackPlayer || whitePlayer || blackRating || whiteRating || board || round || notes
     ) {
       setGameInfo({
         blackPlayer: blackPlayer || '',
@@ -81,7 +85,8 @@ export default function HomePage() {
         board: board || '',
         round: round || '',
         correctPGN: '',
-        remainingPGN: ''
+        remainingPGN: '',
+        notes : ''
       });
     }
     
@@ -98,6 +103,7 @@ export default function HomePage() {
     localStorage.setItem('whiteRating', gameInfo.whiteRating);
     localStorage.setItem('board', gameInfo.board);
     localStorage.setItem('round', gameInfo.round);
+    localStorage.setItem('notes', gameInfo.notes);
   }, [lastValidFEN, editFields, gameInfo]);
   
   
@@ -317,6 +323,7 @@ export default function HomePage() {
       const whiteRating = gameMetadata.WhiteRating;
       const round = gameMetadata.Round;
       const board = gameMetadata.Board;
+      
 
       setGameInfo(prev => ({
         ...prev,
@@ -325,7 +332,8 @@ export default function HomePage() {
         blackRating: gameMetadata.BlackRating || '',
         whiteRating: gameMetadata.WhiteRating || '',
         board: gameMetadata.Board || '',
-        round: gameMetadata.Round || ''
+        round: gameMetadata.Round || '',
+        
       }));
       
 
@@ -522,13 +530,35 @@ export default function HomePage() {
         >
           {error || 'No Errors'}
         </div>
-        <button
-          onClick={handleRecheck}
-          disabled={loading}
-          style={{ ...secondaryButton, marginTop: '0.75rem' }}
-        >
-          Recheck
-        </button>
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', marginTop: '0.75rem' }}>
+  <button
+    onClick={handleRecheck}
+    disabled={loading}
+    style={{ ...secondaryButton }}
+  >
+    Recheck
+  </button>
+
+  <div style={{ flex: 1 }}>
+    <label style={{ display: 'block', fontSize: '0.85rem', color: '#333', marginBottom: '0.25rem' }}>
+      Notes
+    </label>
+    <input
+      type="text"
+      value={gameInfo.notes}
+      onChange={(e) => setGameInfo(prev => ({ ...prev, notes: e.target.value }))}
+      placeholder="Add notes here..."
+      style={{
+        width: '100%',
+        padding: '0.5rem 0.75rem',
+        borderRadius: '6px',
+        border: '1px solid #ccc',
+        fontSize: '0.9rem',
+      }}
+    />
+  </div>
+</div>
+
       </div>
     </div>
   </div>
