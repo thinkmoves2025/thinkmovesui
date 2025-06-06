@@ -58,10 +58,36 @@ export default function AboutPage() {
 
   return (
     <div className="p-8 max-w-2xl mx-auto font-sans">
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Contribute Page</h1>
+      <h1 className="text-3xl font-bold mb-6 text-gray-800">About Page</h1>
+      
 
       {token ? (
+        
         <div className="space-y-6 bg-white shadow-md rounded-lg p-6 border border-gray-200">
+
+          <h2 className="text-3xl font-bold mb-6 text-gray-800">Contribute Section</h2>
+
+          {/* Instructions */}
+<div className="mb-6 bg-blue-50 border-l-4 border-blue-400 p-4 rounded-md">
+  <p className="text-gray-800 mb-2">
+    📢 <strong>How you can contribute:</strong>
+  </p>
+  <ul className="list-disc list-inside text-gray-700 space-y-1 text-sm">
+    <li>
+      To give feedback or suggestions, enter <strong>Organisation Name: Feedback</strong> and write your message below.
+    </li>
+    <li>
+      You can also <strong>upload Chess Score Sheet Images</strong> — as many as you like!
+    </li>
+    <li>
+      Please upload sheets grouped by <strong>chess organization name</strong> to help train the AI better.
+    </li>
+    <li>
+      All contributions will help improve accuracy, features, and overall AI performance.
+    </li>
+  </ul>
+</div>
+
           {/* Upload Images */}
           <div>
             <label className="block text-lg font-medium text-gray-700 mb-1">Upload Images</label>
@@ -127,11 +153,10 @@ export default function AboutPage() {
         <p className="text-lg text-red-600">Please log in to contribute.</p>
       )}
     </div>
-    //Name the page as Information Hub / About
-    //try to change from Contribute Page to About/Information Page  
+
     //Write More details about contribute saction
-//Option to download images of ChessGrow
-//Example Chess Score Sheets download
+    //Option to download images of ChessGrow
+    //Example Chess Score Sheets download
 
 
 
