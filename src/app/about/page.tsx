@@ -88,52 +88,61 @@ export default function AboutPage() {
   </ul>
 </div>
 
-          {/* Upload Images */}
-          <div>
-            <label className="block text-lg font-medium text-gray-700 mb-1">Upload Images</label>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleImageChange}
-              className="w-full text-sm"
-            />
-          </div>
+          <div className="space-y-8 bg-white shadow-lg rounded-xl p-8 border border-gray-200">
 
-          {/* Organisation Name */}
-          <div>
-            <label className="block text-lg font-medium text-gray-700 mb-1">Organisation Name</label>
-            <input
-              type="text"
-              value={orgName}
-              onChange={(e) => setOrgName(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter organisation name"
-            />
-          </div>
+  {/* Section Heading */}
+  <h2 className="text-2xl font-semibold text-gray-800">📤 Upload & Contribute</h2>
 
-          {/* Suggestions */}
-          <div>
-            <label className="block text-lg font-medium text-gray-700 mb-1">Suggestions</label>
-            <textarea
-              value={suggestions}
-              onChange={(e) => setSuggestions(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={4}
-              placeholder="Write any suggestions..."
-            />
-          </div>
+  {/* Organisation Name */}
+  <div className="space-y-2">
+    <label className="block text-lg font-medium text-gray-700">Organisation Name</label>
+    <input
+      type="text"
+      value={orgName}
+      onChange={(e) => setOrgName(e.target.value)}
+      className="w-full border border-gray-300 rounded-md px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+      placeholder="e.g. US Chess Federation or Feedback"
+    />
+  </div>
 
+  {/* Upload Images */}
+  <div className="space-y-2">
+    <label className="block text-lg font-medium text-gray-700">Upload Chess Score Sheet Images</label>
+    <input
+      type="file"
+      accept="image/*"
+      multiple
+      onChange={handleImageChange}
+      className="w-full text-sm text-gray-600"
+    />
+    <p className="text-sm text-gray-500">
+      Upload multiple images. Group by organization for best results.
+    </p>
+  </div>
 
-          {/* Submit Button (inactive) */}
-          <div>
-            <button
-                    onClick={handleSubmit}
-    className="bg-blue-600 text-white px-5 py-2 rounded-md text-base hover:bg-blue-700 transition"
-  >
-    Submit
-  </button>
+  {/* Suggestions */}
+  <div className="space-y-2">
+    <label className="block text-lg font-medium text-gray-700">Suggestions / Feedback</label>
+    <textarea
+      value={suggestions}
+      onChange={(e) => setSuggestions(e.target.value)}
+      className="w-full border border-gray-300 rounded-md px-4 py-2 text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
+      rows={4}
+      placeholder="Write your suggestions or feedback here..."
+    />
+  </div>
+
+  {/* Submit Button */}
+  <div className="text-right">
+    <button
+      onClick={handleSubmit}
+      className="bg-blue-600 text-white px-6 py-2 rounded-md text-base hover:bg-blue-700 transition"
+    >
+      Submit
+    </button>
+  </div>
 </div>
+
 
           {/* Upcoming Features Section */}
 <div className="mt-10 space-y-4 bg-white shadow-md rounded-lg p-6 border border-gray-200">
