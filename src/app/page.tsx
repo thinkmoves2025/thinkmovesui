@@ -549,6 +549,38 @@ export default function HomePage() {
   <button onClick={handleShareGame} style={buttonStyle}>Share Game</button>
 */}
 
+  {/* 2x5 Grid Section */}
+<div
+  style={{
+    display: 'grid',
+    gridTemplateColumns: 'repeat(5, 1fr)',
+    gridTemplateRows: 'repeat(2, auto)',
+    gap: '1rem',
+    marginTop: '2rem',
+    width: '100%',
+    maxWidth: '1000px',
+    marginInline: 'auto',
+  }}
+>
+  {Array.from({ length: 10 }).map((_, idx) => (
+    <div
+      key={idx}
+      style={{
+        backgroundColor: '#f9f9f9',
+        padding: '1rem',
+        borderRadius: '8px',
+        textAlign: 'center',
+        fontSize: '0.9rem',
+        fontWeight: 500,
+        border: '1px solid #ddd',
+      }}
+    >
+      Cell {idx + 1}
+    </div>
+  ))}
+</div>
+
+
     <button onClick={handleSavePositionClick} style={buttonStyle}>Save Position</button>
     <button onClick={handleSaveGameClick} style={buttonStyle}>Save Game</button>
   </div>
