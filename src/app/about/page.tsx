@@ -2,7 +2,7 @@
 
 import { useEffect, useState, ChangeEvent } from 'react';
 
-export default function ContributePage() {
+export default function AboutPage() {
   const [token, setToken] = useState<string | null>(null);
   const [orgName, setOrgName] = useState('');
   const [suggestions, setSuggestions] = useState('');
