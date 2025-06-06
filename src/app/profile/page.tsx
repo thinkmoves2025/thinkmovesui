@@ -5,93 +5,112 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 export default function ProfilePage() {
-  const router = useRouter();
-  const [gameCount, setGameCount] = useState<number>(0);
-  const [positionCount, setPositionCount] = useState<number>(0);
-  const [contributionCount, setContributionCount] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
+    const router = useRouter();
+    const [isClient, setIsClient] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+    const [gameCount, setGameCount] = useState<number>(0);
+    const [positionCount, setPositionCount] = useState<number>(0);
+    const [contributionCount, setContributionCount] = useState<number>(0);
 
-  useEffect(() => {
-    const idToken = localStorage.getItem('id_token');
-    const accessToken = localStorage.getItem('access_token');
+    const handleLogout = () => {
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem('id_token');
+            localStorage.removeItem('access_token');
 
-    if (!idToken || !accessToken) {
-      router.push('/login');
-      return;
-    }
+            const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
+            const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
+            const region = process.env.NEXT_PUBLIC_COGNITO_REGION;
 
-    const fetchCounts = async () => {
-      try {
-        const res = await axios.get(
-          'https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Profile/PlayerSavedItemsCount',
-          {
-            headers: {
-              Authorization: `Bearer ${accessToken}`,
-            },
-          }
-        );
+            if (!cognitoDomain || !clientId || !region) {
+                console.error('❌ Missing Cognito configuration');
+                window.location.href = '/login';
+                return;
+            }
 
-        console.log("Profile data:", res.data);
+            const logoutUrl = `https://${cognitoDomain}.auth.${region}.amazoncognito.com/logout?` +
+                `client_id=${clientId}&logout_uri=http://localhost:3000`;
 
-        setGameCount(res.data.savedGameCount || 0);
-        setPositionCount(res.data.savedPositionCount || 0);
-        setContributionCount(res.data.contributions || 0);
-      } catch (err) {
-        console.error('❌ Error fetching counts:', err);
-      } finally {
-        setLoading(false);
-      }
+            window.location.href = logoutUrl;
+        }
     };
 
-    fetchCounts();
-  }, [router]);
+    useEffect(() => {
+        setIsClient(true);
 
-  const handleLogout = () => {
-    localStorage.removeItem('id_token');
-    localStorage.removeItem('access_token');
+        const checkAuth = () => {
+            const idToken = localStorage.getItem('id_token');
+            const accessToken = localStorage.getItem('access_token');
 
-    const domain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
-    const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
-    const region = process.env.NEXT_PUBLIC_COGNITO_REGION;
+            if (idToken && accessToken) {
+                setIsAuthenticated(true);
+                fetchCounts(accessToken);
+            } else {
+                setIsAuthenticated(false);
+                router.push('/login');
+            }
+        };
 
-    if (!domain || !clientId || !region) {
-      console.error('❌ Missing Cognito ENV variables');
-      return router.push('/login');
+        const timeout = setTimeout(checkAuth, 100);
+        return () => clearTimeout(timeout);
+    }, [router]);
+
+    const fetchCounts = async (accessToken: string) => {
+        try {
+            const response = await axios.get(
+                'https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Profile/PlayerSavedItemsCount',
+                {
+                    headers: {
+                        Authorization: `Bearer ${accessToken}`,
+                    },
+                }
+            );
+
+            const data = response.data;
+            setGameCount(data.savedGameCount || 0);
+            setPositionCount(data.savedPositionCount || 0);
+            setContributionCount(data.contributions || 0);
+        } catch (error) {
+            console.error('Error fetching profile data:', error);
+        }
+    };
+
+    if (!isClient || isAuthenticated === null) {
+        return <main>Checking authentication...</main>;
     }
 
-    const logoutUrl = `https://${domain}.auth.${region}.amazoncognito.com/logout?client_id=${clientId}&logout_uri=http://localhost:3000`;
-    window.location.href = logoutUrl;
-  };
+    return (
+        <main style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
+            <h1 style={{ fontSize: '2rem', marginBottom: '1.5rem' }}>Profile Page</h1>
 
-  if (loading) {
-    return <div className="text-center mt-10 text-gray-600 text-lg">Loading profile data...</div>;
-  }
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '2rem', marginBottom: '2rem' }}>
+                <div style={{ backgroundColor: '#f0f8ff', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+                    <h2 style={{ fontSize: '1rem', color: '#333' }}>Games Saved</h2>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{gameCount}</p>
+                </div>
+                <div style={{ backgroundColor: '#fffaf0', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+                    <h2 style={{ fontSize: '1rem', color: '#333' }}>Positions Saved</h2>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{positionCount}</p>
+                </div>
+                <div style={{ backgroundColor: '#f5f5f5', padding: '1rem', borderRadius: '8px', textAlign: 'center' }}>
+                    <h2 style={{ fontSize: '1rem', color: '#333' }}>Contributions</h2>
+                    <p style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>{contributionCount}</p>
+                </div>
+            </div>
 
-  return (
-    <div className="px-6 py-10 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-800 mb-8">Profile Page</h1>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-10">
-        <div className="bg-blue-50 p-6 rounded-lg shadow text-center">
-          <p className="text-gray-600 text-sm mb-1">Games Saved</p>
-          <p className="text-2xl font-semibold text-blue-700">{gameCount}</p>
-        </div>
-        <div className="bg-orange-50 p-6 rounded-lg shadow text-center">
-          <p className="text-gray-600 text-sm mb-1">Positions Saved</p>
-          <p className="text-2xl font-semibold text-orange-600">{positionCount}</p>
-        </div>
-        <div className="bg-gray-50 p-6 rounded-lg shadow text-center">
-          <p className="text-gray-600 text-sm mb-1">Contributions</p>
-          <p className="text-2xl font-semibold text-gray-700">{contributionCount}</p>
-        </div>
-      </div>
-
-      <button
-        onClick={handleLogout}
-        className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-md transition"
-      >
-        Logout
-      </button>
-    </div>
-  );
+            <button
+                onClick={handleLogout}
+                style={{
+                    padding: '10px 20px',
+                    backgroundColor: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '16px'
+                }}
+            >
+                Logout
+            </button>
+        </main>
+    );
 }
