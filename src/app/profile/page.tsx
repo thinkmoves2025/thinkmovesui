@@ -43,9 +43,9 @@ export default function ProfilePage() {
 
       try {
         const response = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/Profile/GetProfileDetails`,
+          'https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Profile/GetProfileDetails',
           null,
-          {
+        {   
             headers: {
               Authorization: `Bearer ${token}`,
             },
