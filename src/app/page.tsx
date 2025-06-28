@@ -1,12 +1,15 @@
+/* eslint-disable react/no-unescaped-entities */
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 import PositionSaveModal from './components/PositionSaveModal';
 import GameSaveModal from './components/GameSaveModal';
 import axios from 'axios';
+//import { useRef } from 'react';
+
 
 
 function formatPGNMoves(moves: string | string[]): string {
@@ -26,12 +29,14 @@ function formatRemainingMoves(moves: string | string[]): string {
 // Force rebuild: 2025-05-23
 export default function HomePage() {
   const [image, setImage] = useState<File | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const [error, setError] = useState('');
   const [editFields, setEditFields] = useState(['', '']);
   const [loading, setLoading] = useState(false);
   const [lastValidFEN, setLastValidFEN] = useState('start');
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   const [moveHistory, setMoveHistory] = useState<string[]>([new Chess().fen()]);
+  const [showOverlay, setShowOverlay] = useState(false);
   ///const [notes, setNotes] = useState('');
 
 
@@ -120,6 +125,7 @@ export default function HomePage() {
     setShowGameModal(true); // open modal
   };
 
+  //Future Scope
   /*
   const handleSharePosition = async () => {
     try {
@@ -361,24 +367,47 @@ export default function HomePage() {
       setLoading(false);
     }
   };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setImage(e.target.files[0]);
+    }
+  };
+
+
   
 
   return (
-    <>
-<input
-  type="file"
-  accept="image/*"
-  multiple
-  onChange={(e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setImage(e.target.files[0]); // Only taking one — update this if needed
-    }
-  }}
-/>
+  <>
+    {/* Image Upload + Action Buttons */}
+    <div className="flex items-center justify-center gap-4 px-4 py-6 flex-wrap">
+      <input
+        type="file"
+        accept="image/*"
+        multiple
+        ref={inputRef}
+        onChange={handleChange}
+        className="hidden"
+      />
 
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full text-lg disabled:opacity-50"
+      >
+        {loading ? 'Processing...' : 'Analyze Game'}
+      </button>
 
-    <button onClick={handleSubmit} disabled={loading} style={buttonStyle}>{loading ? 'Processing...' : 'Submit Image'}</button>
-    <main
+      <button
+        onClick={() => setShowOverlay(true)}
+        className="text-base text-blue-600 underline hover:text-blue-800"
+      >
+        How it works?
+      </button>
+    </div>
+
+    {/* Main Content */}
+<main
   style={{
     display: 'flex',
     flexDirection: 'column',
@@ -399,283 +428,298 @@ export default function HomePage() {
       maxWidth: '1400px',
     }}
   >
-    {/* Left: Chessboard and navigation */}
-    <div style={{ flex: 1, minWidth: '300px' }}>
+    {/* Chessboard */}
+    <div style={{ flex: 1, minWidth: '320px' }}>
       <Chessboard boardWidth={600} position={lastValidFEN || 'start'} />
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          gap: '1rem',
-          marginTop: '1rem',
-        }}
-      >
-        <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('start')}>⏮</button>
-        <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('prev')}>⏪</button>
-        <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('next')}>⏩</button>
-        <button style={{ ...buttonStyle, minWidth: '50px' }} onClick={() => handleMoveNavigation('end')}>⏭</button>
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginTop: '1rem' }}>
+        {['start', 'prev', 'next', 'end'].map((action, idx) => (
+          <button
+            key={action}
+            onClick={() => handleMoveNavigation(action as never)}
+            style={{
+              padding: '8px 12px',
+              minWidth: '50px',
+              backgroundColor: '#0b80ee',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '1.1rem',
+              cursor: 'pointer',
+            }}
+          >
+            {['⏮', '⏪', '⏩', '⏭'][idx]}
+          </button>
+        ))}
       </div>
     </div>
 
-    {/* Right: Text areas and player info */}
-    <div
-      style={{
-        flex: 1,
-        minWidth: '300px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '2rem',
-      }}
-    >
-      <div style={{ display: 'flex', gap: '1rem' }}>
-        <div style={{ flex: 1 }}>
-          <label>Correct Moves</label>
+    {/* Right Side: Moves + Error/Notes below */}
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: '320px' }}>
+      {/* Move Panels */}
+      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+        {/* Correct */}
+        <div style={{ flex: '1 1 30%' }}>
+          <label style={labelStyle}>Correct Moves</label>
           <textarea
             value={editFields[0] || ''}
             onChange={(e) => setEditFields([e.target.value, editFields[1] || ''])}
-            style={{
-              width: '100%',
-              height: '300px',
-              padding: '10px',
-              borderRadius: '6px',
-              border: '1px solid #ccc',
-              backgroundColor: '#fff',
-              fontSize: '0.9rem',
-            }}
+            style={textareaStyle}
           />
         </div>
-        <div style={{ flex: 1 }}>
-          <label>Remaining Moves</label>
+
+        {/* Remaining */}
+        <div style={{ flex: '1 1 30%' }}>
+          <label style={labelStyle}>Remaining Moves</label>
           <textarea
             value={editFields[1] || ''}
             onChange={(e) => setEditFields([editFields[0] || '', e.target.value])}
-            style={{
-              width: '100%',
-              height: '300px',
-              padding: '10px',
-              borderRadius: '6px',
-              border: '1px solid #ccc',
-              backgroundColor: '#fff',
-              fontSize: '0.9rem',
-            }}
-          />
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-        <div>
-          <label>Black Player</label>
-          <input
-            value={gameInfo.blackPlayer}
-            onChange={(e) => setGameInfo(prev => ({ ...prev, blackPlayer: e.target.value }))}
-            style={inputStyle}
-          />
-        </div>
-        <div>
-          <label>Black Rating</label>
-          <input
-            value={gameInfo.blackRating}
-            onChange={(e) => setGameInfo(prev => ({ ...prev, blackRating: e.target.value }))}
-            style={inputStyle}
-          />
-        </div>
-        <div>
-          <label>White Player</label>
-          <input
-            value={gameInfo.whitePlayer}
-            onChange={(e) => setGameInfo(prev => ({ ...prev, whitePlayer: e.target.value }))}
-            style={inputStyle}
-          />
-        </div>
-        <div>
-          <label>White Rating</label>
-          <input
-            value={gameInfo.whiteRating}
-            onChange={(e) => setGameInfo(prev => ({ ...prev, whiteRating: e.target.value }))}
-            style={inputStyle}
+            style={textareaStyle}
           />
         </div>
 
-
-        <div>
-          <label>Board</label>
-          <input
-            value={gameInfo.board}
-            onChange={(e) => setGameInfo(prev => ({ ...prev, board: e.target.value }))}
-            style={inputStyle}
-          />
-        </div>
-        <div>
-          <label>Round</label>
-          <input
-            value={gameInfo.round}
-            onChange={(e) => setGameInfo(prev => ({ ...prev, round: e.target.value }))}
-            style={inputStyle}
-          />
-        </div>
-
-
-
-      </div>
-
-      <div>
-        <label>Error</label>
-        <div
-          style={{
-            padding: '10px',
-            backgroundColor: '#eee',
-            borderRadius: '6px',
-            minHeight: '40px',
-          }}
-        >
-          {error || 'No Errors'}
-        </div>
-        <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem', marginTop: '0.75rem' }}>
+        {/* Suggested */}
+        <div style={{ flex: '1 1 30%' }}>
+          <label style={labelStyle}>Suggested Moves</label>
+          <div style={scrollBoxStyle}>
+            {chess.moves().map((move, index) => (
   <button
-    onClick={handleRecheck}
-    disabled={loading}
-    style={{ ...secondaryButton }}
+    key={index}
+    onClick={() => alert(`Clicked ${move}`)}
+    style={suggestionButtonStyle}
   >
-    Recheck
+    {move}
   </button>
+))}
 
-  <div style={{ flex: 1 }}>
-    <label style={{ display: 'block', fontSize: '0.85rem', color: '#333', marginBottom: '0.25rem' }}>
-      Notes
-    </label>
-    <input
-      type="text"
-      value={gameInfo.notes}
-      onChange={(e) => setGameInfo(prev => ({ ...prev, notes: e.target.value }))}
-      placeholder="Add notes here..."
-      style={{
-        width: '100%',
-        padding: '0.5rem 0.75rem',
-        borderRadius: '6px',
-        border: '1px solid #ccc',
-        fontSize: '0.9rem',
-      }}
-    />
-  </div>
-</div>
+          </div>
+        </div>
+      </div>
 
+      {/* Error + Notes + Buttons */}
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+    {/* Error */}
+    <div>
+      <label style={{ fontWeight: 'bold', marginBottom: '0.5rem', display: 'block' }}>Error</label>
+      <div
+        style={{
+          padding: '10px',
+          backgroundColor: '#fef3c7',
+          border: '1px solid #facc15',
+          color: '#92400e',
+          borderRadius: '6px',
+          minHeight: '44px',
+          fontSize: '0.9rem',
+          lineHeight: '1.4',
+        }}
+      >
+        {error || 'No Errors'}
       </div>
     </div>
-  </div>
 
-  {/* Bottom: Action buttons */}
-  <div
-    style={{
-      display: 'flex',
-      justifyContent: 'center',
-      flexWrap: 'wrap',
-      gap: '1rem',
-      marginTop: '4rem',
-      width: '100%',
-    }}
-  >
-{/*
-  <button onClick={handleSharePosition} style={buttonStyle}>Share Position</button>
-  <button onClick={handleShareGame} style={buttonStyle}>Share Game</button>
-*/}
+    {/* Notes + Recheck */}
+    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem' }}>
+      <div style={{ flex: 1 }}>
+        <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.25rem', display: 'block' }}>
+          Notes
+        </label>
+        <input
+          type="text"
+          value={gameInfo.notes}
+          onChange={(e) => setGameInfo(prev => ({ ...prev, notes: e.target.value }))}
+          placeholder="Add notes here..."
+          style={{
+            width: '100%',
+            padding: '0.5rem 0.75rem',
+            borderRadius: '6px',
+            border: '1px solid #ccc',
+            fontSize: '0.9rem',
+          }}
+        />
+      </div>
 
-  {/* 2x5 Grid Section */}
-<div
-  style={{
-    display: 'grid',
-    gridTemplateColumns: 'repeat(5, 1fr)',
-    gridTemplateRows: 'repeat(2, auto)',
-    gap: '1rem',
-    marginTop: '2rem',
-    width: '100%',
-    maxWidth: '1000px',
-    marginInline: 'auto',
-  }}
->
-  {Array.from({ length: 10 }).map((_, idx) => (
-    <div
-      key={idx}
-      style={{
-        backgroundColor: '#f9f9f9',
-        padding: '1rem',
-        borderRadius: '8px',
-        textAlign: 'center',
-        fontSize: '0.9rem',
-        fontWeight: 500,
-        border: '1px solid #ddd',
-      }}
-    >
-      Cell {idx + 1}
+      <button
+        onClick={handleRecheck}
+        disabled={loading}
+        style={{
+          padding: '10px 16px',
+          backgroundColor: '#6b7280',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '6px',
+          fontWeight: 'bold',
+          fontSize: '0.9rem',
+          cursor: loading ? 'not-allowed' : 'pointer',
+          opacity: loading ? 0.6 : 1,
+          height: '40px',
+        }}
+      >
+        {loading ? 'Rechecking...' : 'Recheck'}
+      </button>
     </div>
-  ))}
-</div>
 
+    {/* ✅ Save Buttons under Notes */}
+    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '0.5rem' }}>
+      <button onClick={handleSavePositionClick} style={buttonStyle}>Save Position</button>
+      <button onClick={handleSaveGameClick} style={buttonStyle}>Save Game</button>
+      <button
+  onClick={() => alert('Coming Soon')}
+  style={buttonStyle}
+>
+  Share Position
+</button>
 
-    <button onClick={handleSavePositionClick} style={buttonStyle}>Save Position</button>
-    <button onClick={handleSaveGameClick} style={buttonStyle}>Save Game</button>
+<button
+  onClick={() => alert('Coming Soon')}
+  style={buttonStyle}
+>
+  Share Game
+</button>
+    </div>
   </div>
+</div>
+    </div>
+  {/* Player Info */}
+  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '2rem', width: '100%', maxWidth: '1000px' }}>
+    {['blackPlayer', 'blackRating', 'whitePlayer', 'whiteRating', 'board', 'round'].map((key) => (
+      <div key={key}>
+        <label>{key.replace(/([A-Z])/g, ' $1')}</label>
+        <input
+          value={gameInfo[key as keyof typeof gameInfo]}
+          onChange={(e) => setGameInfo(prev => ({ ...prev, [key]: e.target.value }))}
+          style={inputStyle}
+        />
+      </div>
+    ))}
+  </div>
+
 </main>
 
+
+    {/* Overlay / Modals */}
+    {showOverlay && (
+  <div
+    style={{
+      position: 'fixed',
+      inset: 0,
+      zIndex: 9999,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}
+  >
+    <div
+      style={{
+        maxWidth: '500px',
+        width: '90%',
+        padding: '2rem',
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        textAlign: 'left',
+        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+      }}
+    >
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', textAlign: 'center' }}>
+        How it works
+      </h2>
+
+      <div style={{ fontSize: '0.95rem', color: '#555', lineHeight: '1.6' }}>
+        <ol style={{ paddingLeft: '1.2rem', marginBottom: '1rem' }}>
+          <li><strong>Upload</strong> your scoresheet image(s) using the "Select Files" button.</li>
+          <li><strong>Click "Analyze Game"</strong> to let the AI extract moves from the image.</li>
+          <li><strong>Review and edit</strong> the extracted moves on the right side of the screen.</li>
+          <li><strong>Recheck</strong> the moves or <strong>Save Game</strong> once you're satisfied.</li>
+        </ol>
+
+        <p style={{ marginBottom: '1rem' }}>
+          ⚠️ <strong>Only ChessGrow scoresheets are supported</strong> right now. Please upload the front & back images of a ChessGrow scoresheet.
+        </p>
+
+        <p style={{ marginBottom: '0.5rem' }}><strong>Try a sample game:</strong></p>
+        <ul style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem' }}>
+          <li>📥 <a href="/downloads/game1.zip" download>Download Game 1 (ZIP)</a></li>
+          <li>📥 <a href="/downloads/game2.zip" download>Download Game 2 (ZIP)</a></li>
+        </ul>
+
+        <hr style={{ margin: '1rem 0' }} />
+
+        <p>
+          🧾 Want to try this at your own event? You can download and print our official
+          <strong> ChessGrow empty scoresheets</strong>.
+        </p>
+        <p style={{ margin: '0.5rem 0 1rem' }}>
+          Use them in real tournaments, then come back to scan, analyze, and save your games and positions — right here.
+        </p>
+        <p>
+          📄 <a href="#">Download Empty ChessGrow Scoresheet (PDF)</a>
+        </p>
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        <button
+          onClick={() => setShowOverlay(false)}
+          style={{
+            marginTop: '1.5rem',
+            backgroundColor: '#2563eb',
+            color: 'white',
+            padding: '0.5rem 1.5rem',
+            borderRadius: '999px',
+            fontWeight: 'bold',
+            border: 'none',
+            cursor: 'pointer',
+          }}
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+    {/* Modals */}
     {isPositionSaveModalOpen && (
       <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
-        <PositionSaveModal         
-            onClose={() => setIsPositionSaveModalOpen(false)}
-            currentFEN={lastValidFEN}         
-            whosTurn={chess.turn() === 'w' ? 'White' : 'Black'}
-            
-            onSave={async (name, notes, whosTurn) => {
-              const token = localStorage.getItem('id_token');
-              if (!token) {
-                alert('Not logged in!');
-                return;
-              }
-                         
-              whosTurn = chess.turn() === 'w' ? 'White' : 'Black';
-              const payload = {               
-                name,
-                notes,
-                whosTurn,
-                fen: lastValidFEN,
-              };
-            
-              try {
-                await axios.post(
-                  'https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Position/SavePosition',
-                  payload,
-                  {
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                    },
-                  }
-                );
-                alert('Position saved!');
-                setIsPositionSaveModalOpen(false);
-              } catch (err) {
-                console.error('Save failed:', err);
-                alert('Error saving position');
-              }
-            }}
-                    />
+        <PositionSaveModal
+          onClose={() => setIsPositionSaveModalOpen(false)}
+          currentFEN={lastValidFEN}
+          whosTurn={chess.turn() === 'w' ? 'White' : 'Black'}
+          onSave={async (name, notes, whosTurn) => {
+            const token = localStorage.getItem('id_token');
+            if (!token) return alert('Not logged in!');
+            try {
+              await axios.post(
+                'https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Position/SavePosition',
+                { name, notes, whosTurn, fen: lastValidFEN },
+                { headers: { Authorization: `Bearer ${token}` } }
+              );
+              alert('Position saved!');
+              setIsPositionSaveModalOpen(false);
+            } catch (err) {
+              console.error('Save failed:', err);
+              alert('Error saving position');
+            }
+          }}
+        />
       </div>
     )}
 
     {showGameModal && (
-  <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
-    <GameSaveModal
-  onClose={() => setShowGameModal(false)}
-  imageFile={image}
-  gameInfo={{
-    ...gameInfo,
-    correctPGN: editFields[0],
-    remainingPGN: editFields[1]
-  }}
-/>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+        <GameSaveModal
+          onClose={() => setShowGameModal(false)}
+          imageFile={image}
+          gameInfo={{
+            ...gameInfo,
+            correctPGN: editFields[0],
+            remainingPGN: editFields[1]
+          }}
+        />
+      </div>
+    )}
+  </>
+);
 
-  </div>
-)}
-
-    </>
-  );
 
 }
 
@@ -690,12 +734,6 @@ const buttonStyle = {
   minWidth: '150px'
 };
 
-const secondaryButton = {
-  ...buttonStyle,
-  backgroundColor: '#ccc',
-  color: '#333'
-};
-
 const inputStyle = {
   width: '100%',
   padding: '10px',
@@ -703,4 +741,45 @@ const inputStyle = {
   border: '1px solid #ccc',
   backgroundColor: '#fff',
   fontSize: '0.9rem',
+};
+
+const labelStyle = {
+  display: 'block',
+  fontWeight: 'bold',
+  marginBottom: '0.5rem',
+  fontSize: '0.95rem',
+  color: '#1f2937',
+};
+
+const textareaStyle = {
+  width: '100%',
+  height: '280px',
+  padding: '10px',
+  borderRadius: '6px',
+  border: '1px solid #ccc',
+  backgroundColor: '#fff',
+  fontSize: '0.9rem',
+  resize: 'vertical' as const,
+};
+
+const scrollBoxStyle = {
+  height: '280px',
+  padding: '10px',
+  borderRadius: '6px',
+  border: '1px solid #ccc',
+  backgroundColor: '#fff',
+  overflowY: 'auto' as const,
+  display: 'flex',
+  flexDirection: 'column' as const,
+  gap: '8px',
+};
+
+const suggestionButtonStyle = {
+  padding: '8px 12px',
+  backgroundColor: '#f3f4f6',
+  border: '1px solid #d1d5db',
+  borderRadius: '6px',
+  cursor: 'pointer',
+  fontSize: '0.9rem',
+  transition: 'background 0.2s',
 };
