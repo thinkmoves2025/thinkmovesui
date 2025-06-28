@@ -2,82 +2,117 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import axios from 'axios';
 
 export default function ProfilePage() {
-    const router = useRouter();
-    const [isClient, setIsClient] = useState(false);
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const router = useRouter();
+  const [isClient, setIsClient] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [profileData, setProfileData] = useState({
+    playerName: 'Ashay K.',
+    rating: '-',
+    totalGamesSaved: '-',
+    totalPositionsSaved: '-',
+    totalContribsSubmitted: '-',
+  });
 
-    const handleLogout = () => {
-        if (typeof window !== 'undefined') {
-            // Remove local tokens
-            localStorage.removeItem('id_token');
-            localStorage.removeItem('access_token');
+  const handleLogout = () => {
+    const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
+    const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
+    const logoutUri = process.env.NEXT_PUBLIC_COGNITO_LOGOUT_URI;
 
-            // Get Cognito domain and client ID from environment variables
-            const cognitoDomain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
-            const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
-            const region = process.env.NEXT_PUBLIC_COGNITO_REGION;
+    localStorage.removeItem('id_token');
+    localStorage.removeItem('access_token');
 
-            if (!cognitoDomain || !clientId || !region) {
-                console.error('❌ Missing Cognito configuration');
-                window.location.href = '/login';
-                return;
-            }
+    const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
+    window.location.href = logoutUrl;
+  };
 
-            // Construct Cognito logout URL
-            const logoutUrl = `https://${cognitoDomain}.auth.${region}.amazoncognito.com/logout?` +
-                `client_id=${clientId}&` +
-                `logout_uri=http://localhost:3000`;
+  useEffect(() => {
+    setIsClient(true);
 
-            // Redirect to Cognito logout
-            window.location.href = logoutUrl;
-        }
+    const checkAuthAndFetch = async () => {
+      const token = localStorage.getItem('id_token');
+      if (!token) {
+        setIsAuthenticated(false);
+        router.push('/login');
+        return;
+      }
+
+      setIsAuthenticated(true);
+
+      try {
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/Profile/GetProfileDetails`,
+          null,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const data = response.data;
+        setProfileData(prev => ({
+          ...prev,
+          rating: data.rating ?? '-',
+          totalGamesSaved: data.totalGamesSaved ?? '-',
+          totalPositionsSaved: data.totalPositionsSaved ?? '-',
+          totalContribsSubmitted: data.totalContribsSubmitted ?? '-',
+        }));
+      } catch (err) {
+        console.error('Failed to fetch profile data:', err);
+      }
     };
 
-    useEffect(() => {
-        setIsClient(true);
+    const timeout = setTimeout(checkAuthAndFetch, 100);
+    return () => clearTimeout(timeout);
+  }, [router]);
 
-        const checkAuth = () => {
-            const idToken = localStorage.getItem('id_token');
-            const accessToken = localStorage.getItem('access_token');
-            
-            if (idToken && accessToken) {
-                setIsAuthenticated(true);
-            } else {
-                setIsAuthenticated(false);
-                router.push('/login');
-            }
-        };
+  if (!isClient || isAuthenticated === null) {
+    return <main style={{ padding: '2rem' }}>Checking authentication...</main>;
+  }
 
-        // Delay check slightly to ensure localStorage is available
-        const timeout = setTimeout(checkAuth, 100);
+  return (
+    <main style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto', fontFamily: 'sans-serif' }}>
+      <h1 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '1.5rem' }}>
+        Profile Page
+      </h1>
 
-        return () => clearTimeout(timeout);
-    }, [router]);
+      {/* Profile Info */}
+      <div
+        style={{
+          backgroundColor: '#f9fafb',
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          padding: '1.5rem',
+          marginBottom: '2rem',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+        }}
+      >
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, lineHeight: '1.8', fontSize: '1rem', color: '#374151' }}>
+          <li><strong>⭐ Player Rating:</strong> {profileData.rating}</li>
+          <li><strong>🎯 Games Saved:</strong> {profileData.totalGamesSaved}</li>
+          <li><strong>♟ Positions Saved:</strong> {profileData.totalPositionsSaved}</li>
+          <li><strong>💡 Contributions:</strong> {profileData.totalContribsSubmitted}</li>
+        </ul>
+      </div>
 
-    if (!isClient || isAuthenticated === null) {
-        return <main>Checking authentication...</main>;
-    }
-
-    return (
-        <main style={{ padding: '2rem', maxWidth: '800px', margin: '0 auto' }}>
-            <h1>Profile Page</h1>
-            <button 
-                onClick={handleLogout} 
-                style={{ 
-                    marginTop: '2rem',
-                    padding: '10px 20px',
-                    backgroundColor: '#dc3545',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '16px'
-                }}
-            >
-                Logout
-            </button>
-        </main>
-    );
+      {/* Logout */}
+      <button
+        onClick={handleLogout}
+        style={{
+          padding: '10px 20px',
+          backgroundColor: '#dc3545',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '16px',
+        }}
+      >
+        Logout
+      </button>
+    </main>
+  );
 }

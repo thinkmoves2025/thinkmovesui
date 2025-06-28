@@ -2,14 +2,6 @@
 
 import { useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-//import { jwtDecode } from 'jwt-decode';
-
-/*interface CognitoJwtPayload {
-  sub: string;
-  email?: string;
-  name?: string;
-  [key: string]: unknown;
-}*/
 
 export default function CallbackHandler() {
   const router = useRouter();
@@ -23,9 +15,10 @@ export default function CallbackHandler() {
     const code = searchParams.get('code');
     const domain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
     const clientId = process.env.NEXT_PUBLIC_COGNITO_CLIENT_ID;
-    const redirectUri = process.env.NEXT_PUBLIC_COGNITO_REDIRECT_URI;
 
-    if (!code || !domain || !clientId || !redirectUri) {
+    const redirectUri = `${window.location.origin}/callback`; // ✅ dynamic
+
+    if (!code || !domain || !clientId) {
       console.error('❌ Missing required Cognito config or code.');
       alert('Login failed due to missing configuration.');
       return;
@@ -37,7 +30,7 @@ export default function CallbackHandler() {
           grant_type: 'authorization_code',
           client_id: clientId,
           code,
-          redirect_uri: redirectUri,
+          redirect_uri: redirectUri, // ✅ matches login url exactly
         });
 
         const tokenRes = await fetch(`${domain}/oauth2/token`, {
@@ -49,7 +42,6 @@ export default function CallbackHandler() {
         });
 
         const tokenData = await tokenRes.json();
-        //console.log('📦 Token Data:', tokenData);
 
         if (!tokenData.id_token) {
           throw new Error(tokenData.error_description || 'Token not received');
@@ -58,21 +50,14 @@ export default function CallbackHandler() {
         localStorage.setItem('id_token', tokenData.id_token);
         localStorage.setItem('access_token', tokenData.access_token);
 
-        try {
-          //const decoded = jwtDecode<CognitoJwtPayload>(tokenData.id_token);
-          //console.log('✅ Decoded Token:', decoded);
-        } catch (decodeErr) {
-          console.warn('⚠️ Failed to decode token:', decodeErr);
-        }
-
-        // ✅ Authenticated call to SavePlayerDetails (no body needed)
+        // Save player info
         const savePlayerRes = await fetch('https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Player/SavePlayerDetails', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${tokenData.id_token}`
           },
-          body: JSON.stringify({}) // can be removed if your controller accepts no body
+          body: JSON.stringify({})
         });
 
         const raw = await savePlayerRes.text();
