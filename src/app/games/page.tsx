@@ -7,7 +7,7 @@ import axios from 'axios';
 export default function MovesPage() {
   const router = useRouter();
   type Game = {
-    name: string;
+    gameID: string;
     blackRating: string;
     bpName: string;
     notes: string;
@@ -55,25 +55,37 @@ export default function MovesPage() {
   }
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Saved Games</h1>
-      {games.length === 0 ? (
-        <p>No Games found.</p>
-      ) : (
-        <ul className="space-y-2">
-          {games.map((game, index) => (
-            <li key={index} className="border rounded p-3 bg-gray-100">
-              <p><strong>Name:</strong> {game.name}</p>
-              <p><strong>White Rating:</strong> {game.whiteRating}</p>
-              <p><strong>White Name:</strong> {game.wpName}</p>
-              <p><strong>Black Rating:</strong> {game.blackRating}</p>
-              <p><strong>Black Name:</strong> {game.bpName}</p>
-              <p><strong>Created By:</strong> {game.createdby}</p>
-              <p><strong>Likes:</strong> {game.likes}</p>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
+  <div className="p-4">
+    <h1 className="text-2xl font-bold mb-6 text-center">Saved Games</h1>
+    {games.length === 0 ? (
+      <p className="text-center text-gray-600">No games found.</p>
+    ) : (
+      <ul className="space-y-4">
+        {games.map((game, index) => (
+          <li
+            key={index}
+            className="border rounded bg-white shadow p-4 space-y-1 text-sm"
+          >
+            <p><strong>Game ID:</strong> {game.gameID}</p>
+            <p><strong>White:</strong> {game.wpName} ({game.whiteRating})</p>
+            <p><strong>Black:</strong> {game.bpName} ({game.blackRating})</p>
+            <p><strong>Created By:</strong> {game.createdby}</p>
+            <p><strong>Likes:</strong> {game.likes}</p>
+            <div className="pt-2 text-right">
+              <button
+                className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                onClick={() =>
+                  window.open(`/view-game?gameID=${encodeURIComponent(game.gameID)}`, '_blank')
+                }
+              >
+                View Game
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+);
+
 }

@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
-import PositionSaveModal from './components/PositionSaveModal';
+//import PositionSaveModal from './components/PositionSaveModal';
 import GameSaveModal from './components/GameSaveModal';
 import axios from 'axios';
 //import { useRef } from 'react';
@@ -37,6 +37,10 @@ export default function HomePage() {
   const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
   const [moveHistory, setMoveHistory] = useState<string[]>([new Chess().fen()]);
   const [showOverlay, setShowOverlay] = useState(false);
+  const [selectedFiles] = useState<File[]>([]);
+  const [positionNotes, setPositionNotes] = useState('');
+
+  
   ///const [notes, setNotes] = useState('');
 
 
@@ -113,7 +117,7 @@ export default function HomePage() {
   
   
 
-  const [isPositionSaveModalOpen, setIsPositionSaveModalOpen] = useState(false); 
+  const [PositionSaveModal, setIsPositionSaveModalOpen] = useState(false); 
   const [showGameModal, setShowGameModal] = useState(false);
 
 
@@ -124,6 +128,8 @@ export default function HomePage() {
     const handleSaveGameClick = () => {
     setShowGameModal(true); // open modal
   };
+
+  
 
   //Future Scope
   /*
@@ -374,6 +380,8 @@ export default function HomePage() {
     }
   };
 
+  
+
 
   
 
@@ -390,6 +398,12 @@ export default function HomePage() {
         className="hidden"
       />
 
+<button
+  onClick={() => inputRef.current?.click()}
+  className="bg-gray-300 hover:bg-gray-400 text-black font-semibold py-3 px-6 rounded-full"
+>
+  Upload Image(s)
+</button>
       <button
         onClick={handleSubmit}
         disabled={loading}
@@ -404,6 +418,12 @@ export default function HomePage() {
       >
         How it works?
       </button>
+
+        {selectedFiles.length > 0 && (
+    <p className="text-sm text-gray-700 mt-2 text-center w-full">
+      {selectedFiles.length} image{selectedFiles.length > 1 ? "s" : ""} selected
+    </p>
+  )}
     </div>
 
     {/* Main Content */}
@@ -677,20 +697,55 @@ export default function HomePage() {
 )}
 
 
-    {/* Modals */}
-    {isPositionSaveModalOpen && (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
-        <PositionSaveModal
-          onClose={() => setIsPositionSaveModalOpen(false)}
-          currentFEN={lastValidFEN}
-          whosTurn={chess.turn() === 'w' ? 'White' : 'Black'}
-          onSave={async (name, notes, whosTurn) => {
+    {PositionSaveModal && (
+  <div className="fixed inset-0 z-[9999] bg-black bg-opacity-40 flex items-center justify-center px-4">
+    <div className="bg-white rounded-2xl shadow-xl p-6 max-w-md w-full space-y-4">
+      <div className="flex justify-between items-center">
+        <h2 className="text-lg font-semibold">Save Position</h2>
+        <button onClick={() => setIsPositionSaveModalOpen(false)} className="text-gray-500 hover:text-gray-800">&times;</button>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Turn</label>
+        <div className="text-gray-900">{chess.turn() === 'w' ? 'White' : 'Black'}</div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">FEN</label>
+        <div className="text-sm bg-gray-100 p-2 rounded text-gray-800 break-words">{lastValidFEN}</div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+        <textarea
+          className="w-full border border-gray-300 rounded-md p-2 text-sm"
+          rows={3}
+          value={positionNotes}
+          onChange={(e) => setPositionNotes(e.target.value)}
+          placeholder="Add notes here..."
+        />
+      </div>
+
+      <div className="flex justify-end gap-2">
+        <button
+          className="bg-gray-200 hover:bg-gray-300 text-sm px-4 py-2 rounded"
+          onClick={() => setIsPositionSaveModalOpen(false)}
+        >
+          Cancel
+        </button>
+        <button
+          className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded"
+          onClick={async () => {
             const token = localStorage.getItem('id_token');
             if (!token) return alert('Not logged in!');
             try {
               await axios.post(
                 'https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Position/SavePosition',
-                { name, notes, whosTurn, fen: lastValidFEN },
+                {
+                  notes: positionNotes,
+                  whosTurn: chess.turn() === 'w' ? 'White' : 'Black',
+                  fen: lastValidFEN,
+                },
                 { headers: { Authorization: `Bearer ${token}` } }
               );
               alert('Position saved!');
@@ -700,9 +755,14 @@ export default function HomePage() {
               alert('Error saving position');
             }
           }}
-        />
+        >
+          Save
+        </button>
       </div>
-    )}
+    </div>
+  </div>
+)}
+
 
     {showGameModal && (
       <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
