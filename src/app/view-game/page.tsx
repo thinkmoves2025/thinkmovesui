@@ -1,14 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+ 
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Chessboard } from 'react-chessboard';
 import { Chess } from 'chess.js';
 import type { CSSProperties } from 'react';
-import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
- import { useMemo } from 'react';
-
+import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 
 const textareaStyle: CSSProperties = {
   width: '100%',
@@ -31,7 +29,6 @@ const scrollBoxStyle: CSSProperties = {
   backgroundColor: '#f9fafb',
 };
 
-
 const suggestionButtonStyle: CSSProperties = {
   width: '100%',
   padding: '12px',
@@ -43,7 +40,6 @@ const suggestionButtonStyle: CSSProperties = {
   color: '#111827',
   cursor: 'pointer',
 };
-
 
 const buttonStyle: CSSProperties = {
   padding: '8px 12px',
@@ -64,6 +60,7 @@ const inputStyle: CSSProperties = {
 };
 
 export default function ViewGamePage() {
+
   const searchParams = useSearchParams();
   const gameID = searchParams.get('gameID');
 
@@ -81,32 +78,21 @@ export default function ViewGamePage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [fen, setFen] = useState(new Chess().fen());
-  let chessFromFen: Chess;
-
-try {
-  chessFromFen = new Chess(fen);
-} catch {
-  chessFromFen = new Chess(); // fallback to start position
-}
-
-
-
-// 👇 move this into your component function:
-const suggestedMoves = useMemo(() => {
-  try {
-    const chess = new Chess(fen);
-    return chess.moves();
-  } catch {
-    return [];
-  }
-}, [fen]);
-
-
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
-const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
+  const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
 
-  
-  
+  const chessFromFen = useMemo(() => {
+    try {
+      return new Chess(fen);
+    } catch {
+      return new Chess();
+    }
+  }, [fen]);
+
+  const suggestedMoves = useMemo(() => {
+    return chessFromFen.moves();
+  }, [chessFromFen]);
+ 
 
   useEffect(() => {
     const fetchGame = async () => {
@@ -149,21 +135,37 @@ const [currentMoveIndex, setCurrentMoveIndex] = useState(0);
     }
   }, [gameID]);
 
-  const handleMoveNavigation = (action: 'start' | 'prev' | 'next' | 'end') => {
-  setError('');
-  if (!moveHistory.length) return setError('No move history available');
 
-  let newIndex = currentMoveIndex;
-
-  if (action === 'start') newIndex = 0;
-  else if (action === 'end') newIndex = moveHistory.length - 1;
-  else if (action === 'prev' && currentMoveIndex > 0) newIndex = currentMoveIndex - 1;
-  else if (action === 'next' && currentMoveIndex < moveHistory.length - 1) newIndex = currentMoveIndex + 1;
-  else return setError(`Already at the ${action === 'prev' ? 'first' : 'last'} move`);
-
-  setCurrentMoveIndex(newIndex);
-  setFen(moveHistory[newIndex]); // ✅ THIS is the fix
+  const updateMoveHistoryFromPGN = (pgn: string) => {
+  const chess = new Chess();
+  chess.loadPgn(pgn);
+  const parsedMoves = chess.history();
+  chess.reset();
+  const historyFENs = [chess.fen()];
+  parsedMoves.forEach(move => {
+    chess.move(move);
+    historyFENs.push(chess.fen());
+  });
+  setMoveHistory(historyFENs);
+  setCurrentMoveIndex(historyFENs.length - 1);
+  setFen(historyFENs.at(-1) || 'start');
 };
+
+
+  const handleMoveNavigation = (action: 'start' | 'prev' | 'next' | 'end') => {
+    setError('');
+    if (!moveHistory.length) return setError('No move history available');
+
+    let newIndex = currentMoveIndex;
+    if (action === 'start') newIndex = 0;
+    else if (action === 'end') newIndex = moveHistory.length - 1;
+    else if (action === 'prev' && currentMoveIndex > 0) newIndex = currentMoveIndex - 1;
+    else if (action === 'next' && currentMoveIndex < moveHistory.length - 1) newIndex = currentMoveIndex + 1;
+    else return setError(`Already at the ${action === 'prev' ? 'first' : 'last'} move`);
+
+    setCurrentMoveIndex(newIndex);
+    setFen(moveHistory[newIndex]);
+  };
 
 
 
@@ -171,22 +173,18 @@ const handleRecheck = async () => {
   try {
     const latestCorrectMoves = editFields[0]?.trim() || '';
     const latestRemainingMoves = editFields[1]?.trim() || '';
-
     const combinedText = `${latestCorrectMoves}\n${latestRemainingMoves}`.trim();
+
     if (!combinedText) {
       setError("No valid moves to recheck. Please try again.");
       return;
     }
 
     const thinkmovessScannedGame: Record<string, { whiteMove: string; blackMove: string }> = {};
-    const moves = combinedText
-      .replace(/\d+\.\s*/g, '') // Remove move numbers
-      .split(/\s+/)
-      .filter(move => move.trim());
+    const moves = combinedText.replace(/\d+\.\s*/g, '').split(/\s+/).filter(Boolean);
 
     for (let i = 0; i < moves.length; i += 2) {
-      const moveNumber = Math.floor(i / 2) + 1;
-      thinkmovessScannedGame[moveNumber.toString()] = {
+      thinkmovessScannedGame[(Math.floor(i / 2) + 1).toString()] = {
         whiteMove: moves[i],
         blackMove: moves[i + 1] || '',
       };
@@ -218,25 +216,13 @@ const handleRecheck = async () => {
     }
 
     const resultString = new TextDecoder("utf-8").decode(response.Payload);
-    let result;
-    try {
-      result = JSON.parse(resultString);
-    } catch (e) {
-      throw new Error("Failed to parse Lambda result string");
-    }
+    const result = JSON.parse(resultString);
 
-    if (!result.body) {
-      throw new Error("Lambda response missing body");
-    }
+    if (!result.body) throw new Error("Lambda response missing body");
 
-    let parsedBody;
-    try {
-      parsedBody = JSON.parse(result.body);
-    } catch (e) {
-      throw new Error("Failed to parse result.body into object");
-    }
+    const parsedBody = JSON.parse(result.body);
 
-    // ✅ Update move list
+    // ✅ Update move text
     if (Array.isArray(parsedBody.CorrectMovesPGN) && Array.isArray(parsedBody.RemainingPGN)) {
       setEditFields([
         parsedBody.CorrectMovesPGN.join('\n'),
@@ -244,24 +230,29 @@ const handleRecheck = async () => {
       ]);
     }
 
-    // ✅ Update FEN history + current
+    // ✅ Use server MoveFENHistory if available
     if (Array.isArray(parsedBody.MoveFENHistory) && parsedBody.MoveFENHistory.length > 0) {
-  setMoveHistory(parsedBody.MoveFENHistory);
-  setCurrentMoveIndex(parsedBody.MoveFENHistory.length - 1);
-  setFen(parsedBody.MoveFENHistory.at(-1) || 'start');
-} else if (parsedBody.LastValidFEN) {
-  setMoveHistory([parsedBody.LastValidFEN]);
-  setCurrentMoveIndex(0);
-  setFen(parsedBody.LastValidFEN);
-  setError("Move history not available; showing final position.");
-} else {
-  setError("Move history not found in Lambda response");
-}
+      setMoveHistory(parsedBody.MoveFENHistory);
+      setCurrentMoveIndex(parsedBody.MoveFENHistory.length - 1);
+      setFen(parsedBody.MoveFENHistory.at(-1) || 'start');
+    }
+    // ❌ No MoveFENHistory → simulate from PGN
+    else if (parsedBody.CorrectMovesPGN?.length) {
+      updateMoveHistoryFromPGN(parsedBody.CorrectMovesPGN.join(' '));
+    }
+    // ❌ No PGN → fallback to single FEN
+    else if (parsedBody.LastValidFEN) {
+      setMoveHistory([parsedBody.LastValidFEN]);
+      setCurrentMoveIndex(0);
+      setFen(parsedBody.LastValidFEN);
+    } else {
+      setError("Move history not found in Lambda response");
+      return;
+    }
 
+    if (parsedBody.Error) setError(parsedBody.Error);
+    else setError("No Errors");
 
-    // ✅ Update error message if any
-    setError(parsedBody.Error || 'No Errors');
-    
   } catch (err) {
     console.error("❌ Error rechecking moves:", err);
     setError("Failed to recheck moves");
@@ -272,7 +263,50 @@ const handleRecheck = async () => {
 
 
 
-  const handleUpdateGameClick = () => alert('Game Update Coming Soon!');
+
+
+const handleUpdateGameClick = async () => {
+  try {
+    const token = localStorage.getItem('id_token');
+    if (!token) {
+      alert("You are not logged in.");
+      return;
+    }
+
+    const body = {
+      gameID: gameID,
+      correctMoves: editFields[0],
+      remainingMoves: editFields[1],
+      bpName: gameInfo.blackPlayer,
+      blackRating: gameInfo.blackRating,
+      wpName: gameInfo.whitePlayer,
+      whiteRating: gameInfo.whiteRating,
+      board: fen,
+      round: gameInfo.round,
+      notes: gameInfo.notes,
+    };
+
+    const response = await fetch('https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Game/UpdateGame', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(errorText);
+    }
+
+    alert("✅ Game updated successfully!");
+  } catch (err) {
+    console.error("❌ Failed to update game:", err);
+    alert("Failed to update game");
+  }
+};
+
   const handleShareGameClick = () => alert('Game Share Coming Soon');
 
   return (
@@ -297,6 +331,7 @@ const handleRecheck = async () => {
           maxWidth: '1400px',
         }}
       >
+
         {/* Chessboard */}
         <div style={{ flex: 1, minWidth: '320px' }}>
           <Chessboard boardWidth={600} position={fen} />

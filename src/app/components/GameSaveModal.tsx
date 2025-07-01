@@ -19,7 +19,6 @@ interface GameSaveModalProps {
 }
 
 export default function GameSaveModal({ onClose, imageFile, gameInfo }: GameSaveModalProps) {
-  const [name, setName] = useState('');
   const [notes, setNotes] = useState('');
 
   const handleSave = async () => {
@@ -38,9 +37,8 @@ export default function GameSaveModal({ onClose, imageFile, gameInfo }: GameSave
     formData.append('whiteRating', gameInfo.whiteRating);
     formData.append('board', gameInfo.board);
     formData.append('round', gameInfo.round);
-    formData.append('name', name);
     formData.append('notes', notes);
-    formData.append('gameImages', imageFile); // This is the actual image file
+    formData.append('gameImages', imageFile);
 
     try {
       await axios.post('https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Game/SaveGame', formData, {
@@ -57,15 +55,48 @@ export default function GameSaveModal({ onClose, imageFile, gameInfo }: GameSave
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)', zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ backgroundColor: '#fff', padding: '2rem', borderRadius: '8px', minWidth: '400px' }}>
-        <h3>Save Game</h3>
-        <label>Name</label>
-        <input value={name} onChange={(e) => setName(e.target.value)} style={{ width: '100%', marginBottom: '1rem', padding: '8px' }} />
-        <label>Notes</label>
-        <textarea value={notes} onChange={(e) => setNotes(e.target.value)} style={{ width: '100%', height: '100px', marginBottom: '1rem', padding: '8px' }} />
-        <button onClick={handleSave} style={{ marginRight: '1rem', padding: '8px 16px' }}>Save</button>
-        <button onClick={onClose} style={{ padding: '8px 16px' }}>Cancel</button>
+    <div style={{
+      position: 'fixed',
+      inset: 0,
+      backgroundColor: 'rgba(0,0,0,0.4)',
+      zIndex: 10000,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
+    }}>
+      <div style={{
+        backgroundColor: '#fff',
+        padding: '2rem',
+        borderRadius: '12px',
+        minWidth: '400px',
+        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+        fontFamily: 'sans-serif'
+      }}>
+        <h2 style={{ marginBottom: '1rem' }}>Save Game</h2>
+        <label style={{ display: 'block', marginBottom: '0.5rem' }}>Notes</label>
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Add notes here..."
+          style={{
+            width: '100%',
+            height: '120px',
+            padding: '10px',
+            fontSize: '14px',
+            borderRadius: '6px',
+            border: '1px solid #ccc',
+            marginBottom: '1.5rem',
+            resize: 'vertical'
+          }}
+        />
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+          <button onClick={handleSave} style={{ padding: '8px 16px', backgroundColor: '#2563eb', color: '#fff', border: 'none', borderRadius: '6px' }}>
+            Save
+          </button>
+          <button onClick={onClose} style={{ padding: '8px 16px', backgroundColor: '#e5e7eb', border: 'none', borderRadius: '6px' }}>
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
   );

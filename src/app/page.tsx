@@ -764,19 +764,20 @@ export default function HomePage() {
 )}
 
 
-    {showGameModal && (
-      <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
-        <GameSaveModal
-          onClose={() => setShowGameModal(false)}
-          imageFile={image}
-          gameInfo={{
-            ...gameInfo,
-            correctPGN: editFields[0],
-            remainingPGN: editFields[1]
-          }}
-        />
-      </div>
-    )}
+{showGameModal && (
+  <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+    <GameSaveModal
+      onClose={() => setShowGameModal(false)}
+      imageFile={image}
+      gameInfo={{
+        ...gameInfo,
+        correctPGN: editFields[0],
+        remainingPGN: editFields[1]
+      }}
+    />
+  </div>
+)}
+
   </>
 );
 
