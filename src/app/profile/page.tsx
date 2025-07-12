@@ -23,6 +23,14 @@ export default function ProfilePage() {
 
     localStorage.removeItem('id_token');
     localStorage.removeItem('access_token');
+    localStorage.removeItem('correctMoves');  
+    localStorage.removeItem('remainingMoves'); 
+    localStorage.removeItem('blackPlayer'); 
+    localStorage.removeItem('whitePlayer'); 
+    localStorage.removeItem('blackRating'); 
+    localStorage.removeItem('whiteRating'); 
+    localStorage.removeItem('board'); 
+    localStorage.removeItem('round'); 
 
     const logoutUrl = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${logoutUri}`;
     window.location.href = logoutUrl;

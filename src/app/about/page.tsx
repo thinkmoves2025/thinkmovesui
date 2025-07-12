@@ -79,24 +79,6 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Download Examples */}
-          <div className="bg-white border border-gray-200 rounded-xl shadow p-6 space-y-4">
-            <h2 className="text-xl font-semibold text-gray-800">📥 Download Examples</h2>
-            <p className="text-sm text-gray-700">
-              Download sample games or blank ChessGrow scoresheets to use in your tournaments and upload later.
-            </p>
-            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-              <li>📄 <a href="/downloads/game1.zip" download className="text-blue-600 underline">Download Game 1 (ZIP)</a></li>
-              <li>📄 <a href="/downloads/game2.zip" download className="text-blue-600 underline">Download Game 2 (ZIP)</a></li>
-              <li>
-  📄 <a href="/downloads/ChessGrowEmpty.zip" download className="text-blue-600 underline">
-    Download Blank ChessGrow Scoresheet (ZIP)
-  </a>
-</li>
-
-            </ul>
-          </div>
-
           {/* Upcoming Features */}
           <div className="bg-white border border-gray-200 rounded-xl shadow p-6 space-y-3">
             <h2 className="text-xl font-semibold text-gray-800 mb-1">🚀 Upcoming Features</h2>

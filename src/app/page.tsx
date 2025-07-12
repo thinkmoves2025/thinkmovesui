@@ -299,80 +299,88 @@ export default function HomePage() {
     }
   };
   
-  const handleSubmit = async () => {
-    if (!image) return setError('Please select an image first.');
-  
-    const formData = new FormData();
-    formData.append("gameImages", image);
-  
-    setLoading(true);
-    try {
-      const response = await fetch(process.env.NEXT_PUBLIC_THINKMOVES_API!, {
-        method: 'POST',
-        body: formData
+const handleSubmit = async () => {
+  if (!image) {
+    setError('Please select an image first.');
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("gameImages", image);
+
+  const token = localStorage.getItem('id_token');
+  console.log("📦 Sending access token:", token);
+
+  if (!token) {
+    setError("No access token found. Please log in.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const response = await fetch(process.env.NEXT_PUBLIC_THINKMOVES_API!, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const rawText = await response.text();
+
+    if (!response.ok || !rawText) {
+      console.error("❌ Submission failed:", {
+        status: response.status,
+        statusText: response.statusText,
+        body: rawText,
       });
-
-      // Parse the deeply nested response
-      const resultString = await response.text();
-
-      const level1 = JSON.parse(resultString);
-
-      const level2 = JSON.parse(level1.response);
-
-      const parsedBody = JSON.parse(level2.body); // Final usable object
-
-      // Extract and format values
-      const correctMoves = formatPGNMoves(parsedBody.CorrectMovesPGN.join(' ') || '');
-      const remainingMoves = formatRemainingMoves(parsedBody.RemainingPGN.join(' ') || '');
-      const lastValidFEN = parsedBody.LastValidFEN || 'start';
-      const error = parsedBody.Error || 'No Errors';
-      
-      const metadataString = parsedBody.GameMetaDataJSON;
-      const metadataParsed = JSON.parse(metadataString);
-      const gameMetadata = metadataParsed.GameMetadata;
-
-      const blackRating = gameMetadata.BlackRating;
-      const whiteRating = gameMetadata.WhiteRating;
-      const round = gameMetadata.Round;
-      const board = gameMetadata.Board;
-      
-
-      setGameInfo(prev => ({
-        ...prev,
-        blackPlayer: gameMetadata.BlackPlayer || '',
-        whitePlayer: gameMetadata.WhitePlayer || '',
-        blackRating: gameMetadata.BlackRating || '',
-        whiteRating: gameMetadata.WhiteRating || '',
-        board: gameMetadata.Board || '',
-        round: gameMetadata.Round || '',
-        
-      }));
-      
-
-
-      //console.log('Final Values:');
-      //console.log('Correct Moves:', correctMoves);
-      //console.log('Remaining Moves:', remainingMoves);
-      //console.log('Last Valid FEN:', lastValidFEN);
-
-      console.log('blackRating:', blackRating);
-      console.log('whiteRating:', whiteRating);
-      console.log('round:', round);
-      console.log('board:', board);
-
-
-      setEditFields([correctMoves, remainingMoves]);
-      updateMoveHistoryFromPGN(correctMoves);
-      setLastValidFEN(lastValidFEN);
-      setError(error);
-  
-    } catch (err) {
-      console.error("❌ Error submitting moves:", err);
-      setError("Failed to submit moves");
-    } finally {
-      setLoading(false);
+      setError(`Failed with ${response.status}: ${rawText || 'Server error'}`);
+      return;
     }
-  };
+
+    const result = JSON.parse(rawText);
+    const parsed = JSON.parse(result.gameJsonResponse);
+
+    const correctMoves = formatPGNMoves(parsed.CorrectMovesPGN?.join(' ') || '');
+    const remainingMoves = formatRemainingMoves(parsed.RemainingPGN?.join(' ') || '');
+    const lastValidFEN = parsed.LastValidFEN || 'start';
+    const error = parsed.Error || 'No Errors';
+
+    const gameMetadata = JSON.parse(parsed.GameMetaDataJSON);
+
+
+    setGameInfo(prev => ({
+      ...prev,
+      blackPlayer: gameMetadata.BlackName || '',
+      whitePlayer: gameMetadata.WhiteName || '',
+      blackRating: gameMetadata.BlackRating || '',
+      whiteRating: gameMetadata.WhiteRating || '',
+      board: gameMetadata.Board || '',
+      round: gameMetadata.Round || '',
+    }));
+
+    setEditFields([correctMoves, remainingMoves]);
+    updateMoveHistoryFromPGN(correctMoves);
+    setLastValidFEN(lastValidFEN);
+    setError(error);
+
+  } catch (err) {
+    const error = err as unknown as Error;
+    console.error("❌ Error submitting moves:", {
+      message: error.message,
+      stack: error.stack,
+      err,
+    });
+    setError("Failed to submit moves: " + error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -628,71 +636,61 @@ export default function HomePage() {
       justifyContent: 'center',
     }}
   >
-    <div
+<div
+  style={{
+    maxWidth: '500px',
+    width: '90%',
+    padding: '2rem',
+    backgroundColor: 'white',
+    borderRadius: '12px',
+    textAlign: 'left',
+    boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+  }}
+>
+  <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', textAlign: 'center' }}>
+    How it works
+  </h2>
+
+  <div style={{ fontSize: '0.95rem', color: '#555', lineHeight: '1.6' }}>
+    <ul style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem' }}>
+      <li>📤 <strong>Upload</strong> your scoresheet image(s) using the "Select Files" button.</li>
+      <li>⚡ <strong>Analyze</strong> the game — AI will extract moves and player info.</li>
+      <li>🛠️ <strong>Edit</strong> any errors directly in the move editor.</li>
+      <li>🔁 <strong>Recheck</strong> with real chess logic to catch issues.</li>
+      <li>💾 <strong>Save</strong> the game once you're satisfied.</li>
+    </ul>
+
+    <p style={{ marginBottom: '1rem' }}>
+      🧾 <strong>Currently supported:</strong> ThinkMoves official scoresheets (front & back).
+      More formats — including USCF scoresheets — are coming soon!
+    </p>
+
+    <p>
+      Whether you're a player, coach, or tournament organizer, ThinkMoves makes it easy to digitize and manage your chess games.
+      Upload a scoresheet, analyze the game, make corrections, and save it — all in seconds.
+    </p>
+  </div>
+
+  <div style={{ textAlign: 'center' }}>
+    <button
+      onClick={() => setShowOverlay(false)}
       style={{
-        maxWidth: '500px',
-        width: '90%',
-        padding: '2rem',
-        backgroundColor: 'white',
-        borderRadius: '12px',
-        textAlign: 'left',
-        boxShadow: '0 10px 25px rgba(0, 0, 0, 0.2)',
+        marginTop: '1.5rem',
+        backgroundColor: '#2563eb',
+        color: 'white',
+        padding: '0.5rem 1.5rem',
+        borderRadius: '999px',
+        fontWeight: 'bold',
+        border: 'none',
+        cursor: 'pointer',
       }}
     >
-      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', textAlign: 'center' }}>
-        How it works
-      </h2>
+      Got it
+    </button>
+  </div>
+</div>
 
-      <div style={{ fontSize: '0.95rem', color: '#555', lineHeight: '1.6' }}>
-        <ol style={{ paddingLeft: '1.2rem', marginBottom: '1rem' }}>
-          <li><strong>Upload</strong> your scoresheet image(s) using the "Select Files" button.</li>
-          <li><strong>Click "Analyze Game"</strong> to let the AI extract moves from the image.</li>
-          <li><strong>Review and edit</strong> the extracted moves on the right side of the screen.</li>
-          <li><strong>Recheck</strong> the moves or <strong>Save Game</strong> once you're satisfied.</li>
-        </ol>
 
-        <p style={{ marginBottom: '1rem' }}>
-          ⚠️ <strong>Only ChessGrow scoresheets are supported</strong> right now. Please upload the front & back images of a ChessGrow scoresheet.
-        </p>
-
-        <p style={{ marginBottom: '0.5rem' }}><strong>Try a sample game:</strong></p>
-        <ul style={{ paddingLeft: '1.2rem', marginBottom: '1.5rem' }}>
-          <li>📥 <a href="/downloads/game1.zip" download>Download Game 1 (ZIP)</a></li>
-          <li>📥 <a href="/downloads/game2.zip" download>Download Game 2 (ZIP)</a></li>
-        </ul>
-
-        <hr style={{ margin: '1rem 0' }} />
-
-        <p>
-          🧾 Want to try this at your own event? You can download and print our official
-          <strong> ChessGrow empty scoresheets</strong>.
-        </p>
-        <p style={{ margin: '0.5rem 0 1rem' }}>
-          Use them in real tournaments, then come back to scan, analyze, and save your games and positions — right here.
-        </p>
-        <p>
-          📄 <a href="#">Download Empty ChessGrow Scoresheet (PDF)</a>
-        </p>
-      </div>
-
-      <div style={{ textAlign: 'center' }}>
-        <button
-          onClick={() => setShowOverlay(false)}
-          style={{
-            marginTop: '1.5rem',
-            backgroundColor: '#2563eb',
-            color: 'white',
-            padding: '0.5rem 1.5rem',
-            borderRadius: '999px',
-            fontWeight: 'bold',
-            border: 'none',
-            cursor: 'pointer',
-          }}
-        >
-          Got it
-        </button>
-      </div>
-    </div>
   </div>
 )}
 

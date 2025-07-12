@@ -75,7 +75,8 @@ export default function CallbackHandler() {
         if (saveResponse === 'Player saved successfully' || saveResponse === 'Player already exists') {
           window.dispatchEvent(new Event('login-success'));
         }
-
+        localStorage.removeItem('id_token');
+        localStorage.removeItem('access_token');
         router.push('/');
       } catch (err) {
         console.error('❌ Callback Error:', err);
