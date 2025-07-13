@@ -379,9 +379,6 @@ const handleSubmit = async () => {
 };
 
 
-
-
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setImage(e.target.files[0]);
@@ -396,7 +393,7 @@ const handleSubmit = async () => {
   return (
   <>
     {/* Image Upload + Action Buttons */}
-    <div className="flex items-center justify-center gap-4 px-4 py-6 flex-wrap">
+    <div className="flex flex-wrap items-center justify-center gap-4 px-4 py-6">
       <input
         type="file"
         accept="image/*"
@@ -405,13 +402,12 @@ const handleSubmit = async () => {
         onChange={handleChange}
         className="hidden"
       />
-
-<button
-  onClick={() => inputRef.current?.click()}
-  className="bg-gray-300 hover:bg-gray-400 text-black font-semibold py-3 px-6 rounded-full"
->
-  Upload Image(s)
-</button>
+      <button
+        onClick={() => inputRef.current?.click()}
+        className="bg-gray-300 hover:bg-gray-400 text-black font-semibold py-3 px-6 rounded-full"
+      >
+        Upload Image(s)
+      </button>
       <button
         onClick={handleSubmit}
         disabled={loading}
@@ -419,208 +415,137 @@ const handleSubmit = async () => {
       >
         {loading ? 'Processing...' : 'Analyze Game'}
       </button>
-
       <button
         onClick={() => setShowOverlay(true)}
         className="text-base text-blue-600 underline hover:text-blue-800"
       >
         How it works?
       </button>
-
-        {selectedFiles.length > 0 && (
-    <p className="text-sm text-gray-700 mt-2 text-center w-full">
-      {selectedFiles.length} image{selectedFiles.length > 1 ? "s" : ""} selected
-    </p>
-  )}
+      {selectedFiles.length > 0 && (
+        <p className="text-sm text-gray-700 mt-2 w-full text-center">
+          {selectedFiles.length} image{selectedFiles.length > 1 ? 's' : ''} selected
+        </p>
+      )}
     </div>
 
-    {/* Main Content */}
-<main
-  style={{
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    padding: '3rem 2rem',
-    minHeight: '100vh',
-    backgroundColor: '#f9f9f9',
-  }}
->
-  <div
-    style={{
-      display: 'flex',
-      flexWrap: 'wrap',
-      justifyContent: 'center',
-      alignItems: 'flex-start',
-      gap: '2rem',
-      width: '100%',
-      maxWidth: '1400px',
-    }}
-  >
-    {/* Chessboard */}
-    <div style={{ flex: 1, minWidth: '320px' }}>
-      <Chessboard boardWidth={600} position={lastValidFEN || 'start'} />
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginTop: '1rem' }}>
-        {['start', 'prev', 'next', 'end'].map((action, idx) => (
-          <button
-            key={action}
-            onClick={() => handleMoveNavigation(action as never)}
-            style={{
-              padding: '8px 12px',
-              minWidth: '50px',
-              backgroundColor: '#0b80ee',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '6px',
-              fontSize: '1.1rem',
-              cursor: 'pointer',
-            }}
-          >
-            {['⏮', '⏪', '⏩', '⏭'][idx]}
-          </button>
-        ))}
-      </div>
-    </div>
+    {/* Main Section */}
+    <main className="min-h-screen bg-[#f9f9f9] px-4 py-10 flex flex-col items-center">
+      <div className="w-full max-w-[1400px] flex flex-col lg:flex-row gap-10 items-center lg:items-start">
+        {/* Chessboard */}
+        <div className="w-full lg:w-1/2 flex flex-col items-center justify-center lg:pl-8">
+<div className="w-full lg:w-1/2 flex justify-center lg:justify-end px-4">
+  <Chessboard
+  boardWidth={typeof window !== 'undefined' && window.innerWidth < 768 ? 320 : 500}
+  position={lastValidFEN || 'start'}
+/>
 
-    {/* Right Side: Moves + Error/Notes below */}
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '1.5rem', minWidth: '320px' }}>
-      {/* Move Panels */}
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-        {/* Correct */}
-        <div style={{ flex: '1 1 30%' }}>
-          <label style={labelStyle}>Correct Moves</label>
-          <textarea
-            value={editFields[0] || ''}
-            onChange={(e) => setEditFields([e.target.value, editFields[1] || ''])}
-            style={textareaStyle}
-          />
+</div>
+
+
+
+
+        <div className="flex justify-center gap-3 mt-4">
+          {['start', 'prev', 'next', 'end'].map((action, idx) => (
+            <button
+              key={action}
+              onClick={() => handleMoveNavigation(action as never)}
+              className="px-3 py-2 bg-blue-600 text-white rounded text-lg"
+            >
+              {['⏮', '⏪', '⏩', '⏭'][idx]}
+            </button>
+          ))}
         </div>
 
-        {/* Remaining */}
-        <div style={{ flex: '1 1 30%' }}>
-          <label style={labelStyle}>Remaining Moves</label>
-          <textarea
-            value={editFields[1] || ''}
-            onChange={(e) => setEditFields([editFields[0] || '', e.target.value])}
-            style={textareaStyle}
-          />
         </div>
+        {/* Right Side Panels */}
+        <div className="w-full lg:w-1/2 flex flex-col gap-6">
+          {/* Moves Panels */}
+          <div className="flex flex-col md:flex-row gap-4 w-full">
 
-        {/* Suggested */}
-        <div style={{ flex: '1 1 30%' }}>
-          <label style={labelStyle}>Suggested Moves</label>
-          <div style={scrollBoxStyle}>
-            {chess.moves().map((move, index) => (
-  <button
-    key={index}
-    onClick={() => alert(`Clicked ${move}`)}
-    style={suggestionButtonStyle}
-  >
-    {move}
-  </button>
-))}
+            {['Correct Moves', 'Remaining Moves', 'Suggested Moves'].map((label, i) => (
+              <div key={label} className="flex-1">
+                <label className="font-semibold block mb-1">{label}</label>
+                {label === 'Suggested Moves' ? (
+                  <div className="h-[150px] overflow-y-auto border rounded p-2 space-y-1">
+                    {chess.moves().map((move, index) => (
+                      <button
+                        key={index}
+                        onClick={() => alert(`Clicked ${move}`)}
+                        className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded block w-full text-left"
+                      >
+                        {move}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <textarea
+                    value={editFields[i] || ''}
+                    onChange={(e) => {
+                      const newFields = [...editFields];
+                      newFields[i] = e.target.value;
+                      setEditFields(newFields);
+                    }}
+                    className="w-full min-h-[120px] border p-2 rounded text-sm"
+                  />
+                )}
+              </div>
+            ))}
+          </div>
 
+          {/* Errors, Notes, Save/Recheck */}
+          <div className="flex flex-col gap-4">
+            <div>
+              <label className="font-semibold block mb-1">Error</label>
+              <div className="bg-yellow-100 border border-yellow-400 text-yellow-800 rounded p-2 min-h-[44px] text-sm">
+                {error || 'No Errors'}
+              </div>
+            </div>
+
+            <div className="flex flex-col md:flex-row gap-4 items-start md:items-end">
+              <div className="flex-1">
+                <label className="text-sm font-semibold block mb-1">Notes</label>
+                <input
+                  type="text"
+                  value={gameInfo.notes}
+                  onChange={(e) => setGameInfo(prev => ({ ...prev, notes: e.target.value }))}
+                  className="w-full border rounded p-2 text-sm"
+                  placeholder="Add notes here..."
+                />
+              </div>
+              <button
+                onClick={handleRecheck}
+                disabled={loading}
+                className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded text-sm disabled:opacity-50"
+              >
+                {loading ? 'Rechecking...' : 'Recheck'}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap justify-center md:justify-end gap-2">
+
+              <button onClick={handleSavePositionClick} style={buttonStyle}>Save Position</button>
+              <button onClick={handleSaveGameClick} style={buttonStyle}>Save Game</button>
+              <button onClick={() => alert('Coming Soon')} style={buttonStyle}>Share Position</button>
+              <button onClick={() => alert('Coming Soon')} style={buttonStyle}>Share Game</button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Error + Notes + Buttons */}
-  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-    {/* Error */}
-    <div>
-      <label style={{ fontWeight: 'bold', marginBottom: '0.5rem', display: 'block' }}>Error</label>
-      <div
-        style={{
-          padding: '10px',
-          backgroundColor: '#fef3c7',
-          border: '1px solid #facc15',
-          color: '#92400e',
-          borderRadius: '6px',
-          minHeight: '44px',
-          fontSize: '0.9rem',
-          lineHeight: '1.4',
-        }}
-      >
-        {error || 'No Errors'}
+      {/* Player Info Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-10 w-full max-w-4xl">
+        {['blackPlayer', 'blackRating', 'whitePlayer', 'whiteRating', 'board', 'round'].map((key) => (
+          <div key={key}>
+            <label className="block font-medium mb-1">{key.replace(/([A-Z])/g, ' $1')}</label>
+            <input
+              value={gameInfo[key as keyof typeof gameInfo]}
+              onChange={(e) => setGameInfo(prev => ({ ...prev, [key]: e.target.value }))}
+              className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            />
+          </div>
+        ))}
       </div>
-    </div>
-
-    {/* Notes + Recheck */}
-    <div style={{ display: 'flex', alignItems: 'flex-end', gap: '1rem' }}>
-      <div style={{ flex: 1 }}>
-        <label style={{ fontSize: '0.85rem', fontWeight: 'bold', color: '#1f2937', marginBottom: '0.25rem', display: 'block' }}>
-          Notes
-        </label>
-        <input
-          type="text"
-          value={gameInfo.notes}
-          onChange={(e) => setGameInfo(prev => ({ ...prev, notes: e.target.value }))}
-          placeholder="Add notes here..."
-          style={{
-            width: '100%',
-            padding: '0.5rem 0.75rem',
-            borderRadius: '6px',
-            border: '1px solid #ccc',
-            fontSize: '0.9rem',
-          }}
-        />
-      </div>
-
-      <button
-        onClick={handleRecheck}
-        disabled={loading}
-        style={{
-          padding: '10px 16px',
-          backgroundColor: '#6b7280',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '6px',
-          fontWeight: 'bold',
-          fontSize: '0.9rem',
-          cursor: loading ? 'not-allowed' : 'pointer',
-          opacity: loading ? 0.6 : 1,
-          height: '40px',
-        }}
-      >
-        {loading ? 'Rechecking...' : 'Recheck'}
-      </button>
-    </div>
-
-    {/* ✅ Save Buttons under Notes */}
-    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem', marginTop: '0.5rem' }}>
-      <button onClick={handleSavePositionClick} style={buttonStyle}>Save Position</button>
-      <button onClick={handleSaveGameClick} style={buttonStyle}>Save Game</button>
-      <button
-  onClick={() => alert('Coming Soon')}
-  style={buttonStyle}
->
-  Share Position
-</button>
-
-<button
-  onClick={() => alert('Coming Soon')}
-  style={buttonStyle}
->
-  Share Game
-</button>
-    </div>
-  </div>
-</div>
-    </div>
-  {/* Player Info */}
-  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '2rem', width: '100%', maxWidth: '1000px' }}>
-    {['blackPlayer', 'blackRating', 'whitePlayer', 'whiteRating', 'board', 'round'].map((key) => (
-      <div key={key}>
-        <label>{key.replace(/([A-Z])/g, ' $1')}</label>
-        <input
-          value={gameInfo[key as keyof typeof gameInfo]}
-          onChange={(e) => setGameInfo(prev => ({ ...prev, [key]: e.target.value }))}
-          style={inputStyle}
-        />
-      </div>
-    ))}
-  </div>
-
-</main>
+    </main>
 
 
     {/* Overlay / Modals */}
@@ -793,52 +718,3 @@ const buttonStyle = {
   minWidth: '150px'
 };
 
-const inputStyle = {
-  width: '100%',
-  padding: '10px',
-  borderRadius: '6px',
-  border: '1px solid #ccc',
-  backgroundColor: '#fff',
-  fontSize: '0.9rem',
-};
-
-const labelStyle = {
-  display: 'block',
-  fontWeight: 'bold',
-  marginBottom: '0.5rem',
-  fontSize: '0.95rem',
-  color: '#1f2937',
-};
-
-const textareaStyle = {
-  width: '100%',
-  height: '280px',
-  padding: '10px',
-  borderRadius: '6px',
-  border: '1px solid #ccc',
-  backgroundColor: '#fff',
-  fontSize: '0.9rem',
-  resize: 'vertical' as const,
-};
-
-const scrollBoxStyle = {
-  height: '280px',
-  padding: '10px',
-  borderRadius: '6px',
-  border: '1px solid #ccc',
-  backgroundColor: '#fff',
-  overflowY: 'auto' as const,
-  display: 'flex',
-  flexDirection: 'column' as const,
-  gap: '8px',
-};
-
-const suggestionButtonStyle = {
-  padding: '8px 12px',
-  backgroundColor: '#f3f4f6',
-  border: '1px solid #d1d5db',
-  borderRadius: '6px',
-  cursor: 'pointer',
-  fontSize: '0.9rem',
-  transition: 'background 0.2s',
-};

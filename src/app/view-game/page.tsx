@@ -334,27 +334,34 @@ const handleUpdateGameClick = async () => {
 
         {/* Chessboard */}
         <div style={{ flex: 1, minWidth: '320px' }}>
-          <Chessboard boardWidth={600} position={fen} />
-<div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginTop: '1rem' }}>
-  {['start', 'prev', 'next', 'end'].map((action, idx) => (
-    <button
-      key={action}
-      onClick={() => handleMoveNavigation(action as any)}
-      style={{
-        padding: '8px 12px',
-        minWidth: '50px',
-        backgroundColor: '#0b80ee',
-        color: '#fff',
-        border: 'none',
-        borderRadius: '6px',
-        fontSize: '1.1rem',
-        cursor: 'pointer',
-      }}
-    >
-      {['⏮', '⏪', '⏩', '⏭'][idx]}
-    </button>
-  ))}
-</div>
+  <Chessboard
+    boardWidth={
+      typeof window !== 'undefined' && window.innerWidth < 768 ? 320 : 600
+    }
+    position={fen}
+  />
+
+  <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginTop: '1rem' }}>
+    {['start', 'prev', 'next', 'end'].map((action, idx) => (
+      <button
+        key={action}
+        onClick={() => handleMoveNavigation(action as any)}
+        style={{
+          padding: '8px 12px',
+          minWidth: '50px',
+          backgroundColor: '#0b80ee',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '6px',
+          fontSize: '1.1rem',
+          cursor: 'pointer',
+        }}
+      >
+        {['⏮', '⏪', '⏩', '⏭'][idx]}
+      </button>
+    ))}
+  </div>
+
 
         </div>
 

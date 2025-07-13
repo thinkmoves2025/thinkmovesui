@@ -79,19 +79,32 @@ export default function AboutPage() {
             </div>
           </div>
 
-          {/* Upcoming Features */}
-          <div className="bg-white border border-gray-200 rounded-xl shadow p-6 space-y-3">
-            <h2 className="text-xl font-semibold text-gray-800 mb-1">🚀 Upcoming Features</h2>
-            <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
-              <li><strong>AI Suggestions:</strong> Fix invalid moves automatically.</li>
-              <li><strong>Saved Game History:</strong> Revisit and review games.</li>
-              <li><strong>Leaderboard:</strong> Track top contributors.</li>
-              <li><strong>Game Sharing:</strong> Share PGNs and positions easily.</li>
-              <li><strong>Multi-Language Support:</strong> Localize for regions.</li>
-              <li><strong>Profile Enhancements:</strong> Track your growth.</li>
-              <li><strong>Friends Feature:</strong> Connect with other players.</li>
-            </ul>
-          </div>
+{/* Upcoming Features */}
+<div className="bg-white border border-gray-200 rounded-xl shadow p-6 space-y-3">
+  <h2 className="text-xl font-semibold text-gray-800 mb-1">🚀 Upcoming Features</h2>
+  <ul className="list-disc list-inside text-gray-700 text-sm space-y-1">
+    <li>
+      <strong>Game Sharing & Friends (Coming Next):</strong> Share PGNs and positions, and connect with other players.
+    </li>
+    <li>
+      <strong>Official Scoresheet Support:</strong> Adding support for official USCF chess scoresheets — so you can upload those images too.
+    </li>
+        <li>
+      <strong>Leaderboard:</strong> Track top contributors and most active players.
+    </li>
+    <li>
+      <strong>Multi-Language Support:</strong> Use the app in your preferred language.
+    </li>
+    <li>
+      <strong>Profile Enhancements:</strong> Monitor your growth, activity, and achievements.
+    </li>
+    <li>
+      <strong>AI Suggestions:</strong> Fix invalid moves automatically using intelligent recommendations.
+    </li>
+
+
+  </ul>
+</div>
 
         </section>
       ) : (

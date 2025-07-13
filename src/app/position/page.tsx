@@ -50,51 +50,52 @@ export default function PositionsPage() {
   if (!isClient) return <p>Checking login...</p>;
 
   return (
-    <div className="p-4">
-      <h1 className="text-xl font-bold mb-4">Saved Positions</h1>
-      {positions.length === 0 ? (
-        <p>No positions found.</p>
-      ) : (
-        <ul className="space-y-4">
-          {positions.map((pos, index) => (
-            <li
-              key={index}
-              className="border rounded bg-white shadow-md p-3 flex flex-col md:flex-row items-center md:items-start md:h-48"
-            >
-              {/* Chessboard */}
-              <div className="flex-shrink-0 w-full md:w-48">
-                <Chessboard position={pos.fen} boardWidth={192} />
-              </div>
+  <div className="p-4 max-w-5xl mx-auto">
+    <h1 className="text-2xl font-bold mb-6">Saved Positions</h1>
 
-              {/* Details */}
-              <div className="flex-1 md:ml-6 w-full mt-3 md:mt-0">
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                  <p><strong>Position ID:</strong> {pos.posID}</p>
-                  <p><strong>FEN:</strong> {pos.fen}</p>
-                  <p><strong>Turn:</strong> {pos.whosTurn}</p>
-                  <p><strong>Notes:</strong> {pos.notes}</p>
-                  <p><strong>Likes:</strong> {pos.likes}</p>
-                  <p><strong>Created By:</strong> {pos.createdBy}</p>
-                  <p><strong>Created Time:</strong> {pos.createdTime}</p>
-                </div>
-                <div className="mt-2 text-right">
-                  <button
-                    className="px-4 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                    onClick={() =>
-                      window.open(
-                        `/view-position?fen=${encodeURIComponent(pos.fen)}&posID=${encodeURIComponent(pos.posID)}&whosTurn=${pos.whosTurn}&notes=${encodeURIComponent(pos.notes)}&likes=${pos.likes}&createdBy=${pos.createdBy}&createdTime=${encodeURIComponent(pos.createdTime)}`,
-                        "_blank"
-                      )
-                    }
-                  >
-                    View Position in New Tab
-                  </button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
+    {positions.length === 0 ? (
+      <p className="text-gray-500">No positions found.</p>
+    ) : (
+      <ul className="space-y-6">
+        {positions.map((pos, index) => (
+          <li
+            key={index}
+            className="border rounded bg-white shadow-md p-4 flex flex-col items-center"
+          >
+            {/* Chessboard */}
+            <div className="mb-4">
+              <Chessboard position={pos.fen} boardWidth={192} />
+            </div>
+
+            {/* Details Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm w-full max-w-3xl">
+              <p><strong>Position ID:</strong> {pos.posID}</p>
+              <p className="break-all"><strong>FEN:</strong> {pos.fen}</p>
+              <p><strong>Turn:</strong> {pos.whosTurn}</p>
+              <p className="break-words"><strong>Notes:</strong> {pos.notes}</p>
+              <p><strong>Likes:</strong> {pos.likes}</p>
+              <p className="break-words"><strong>Created By:</strong> {pos.createdBy}</p>
+              <p><strong>Created Time:</strong> {pos.createdTime}</p>
+            </div>
+
+            {/* View Button */}
+            <div className="mt-4">
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                onClick={() =>
+                  window.open(
+                    `/view-position?fen=${encodeURIComponent(pos.fen)}&posID=${encodeURIComponent(pos.posID)}&whosTurn=${pos.whosTurn}&notes=${encodeURIComponent(pos.notes)}&likes=${pos.likes}&createdBy=${pos.createdBy}&createdTime=${encodeURIComponent(pos.createdTime)}`,
+                    "_blank"
+                  )
+                }
+              >
+                View Position in New Tab
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+);
 }

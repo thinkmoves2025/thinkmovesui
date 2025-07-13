@@ -1,10 +1,6 @@
 'use client';
 import Image from 'next/image';
 
-
-
-
-
 export default function LoginPage() {
   const handleLogin = () => {
     const domain = process.env.NEXT_PUBLIC_COGNITO_DOMAIN;
@@ -34,50 +30,71 @@ return (
     }}
   >
 
-    {/* Top-right buttons */}
-  <div
-    style={{
-      position: 'absolute',
-      top: '1.5rem',
-      right: '2rem',
-      display: 'flex',
-      gap: '0.75rem',
-      flexWrap: 'wrap',
-      justifyContent: 'flex-end',
-    }}
-  >
-    <button
-      onClick={handleLogin}
-      style={{
-        padding: '10px 20px',
-        fontSize: '0.95rem',
-        backgroundColor: '#3b82f6',
-        color: '#fff',
-        border: 'none',
-        borderRadius: '8px',
-        cursor: 'pointer',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-      }}
-    >
-      Get Started Free
-    </button>
+    <style>
+  {`
+    .top-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      position: relative;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
 
-<a
-  href="/downloads/ThinkMovesEmpty.zip"
-  download
-  style={{
-    backgroundColor: '#10b981',
-    color: '#fff',
-    padding: '12px 24px',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    textDecoration: 'none',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-  }}
->
-  Download Blank Sheets
-</a>
-  </div>
+    @media (min-width: 768px) {
+      .top-buttons {
+        position: absolute;
+        top: 1.5rem;
+        right: 2rem;
+        flex-direction: row;
+        justify-content: flex-end;
+        align-items: center;
+        margin-bottom: 0;
+      }
+    }
+
+    .top-button {
+      padding: 10px 20px;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      width: 220px;
+      max-width: 90%;
+      text-align: center;
+    }
+
+    .get-started {
+      background-color: #3b82f6;
+      color: #fff;
+    }
+
+    .download-sheets {
+      background-color: #10b981;
+      color: #fff;
+      text-decoration: none;
+    }
+  `}
+</style>
+
+
+    {/* Top-right buttons */}
+{/* Top Buttons – Responsive */}
+<div className="top-buttons">
+  <button onClick={handleLogin} className="top-button get-started">
+    Get Started Free
+  </button>
+  <a
+    href="/downloads/ThinkMovesEmpty.zip"
+    download
+    className="top-button download-sheets"
+  >
+    Download Blank Sheets
+  </a>
+</div>
+
     <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
       {/* App Name */}
       <h1 style={{ fontSize: '2.2rem', fontWeight: 'bold', marginBottom: '0.5rem', color: '#1f2937' }}>
