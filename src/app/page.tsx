@@ -8,6 +8,7 @@ import { LambdaClient, InvokeCommand } from '@aws-sdk/client-lambda';
 //import PositionSaveModal from './components/PositionSaveModal';
 import GameSaveModal from './components/GameSaveModal';
 import axios from 'axios';
+import { set, get } from 'idb-keyval';
 //import { useRef } from 'react';
 
 
@@ -62,7 +63,8 @@ export default function HomePage() {
     notes: ''
   });
 
-  useEffect(() => {
+useEffect(() => {
+  const loadSavedData = async () => {
     const storedFEN = localStorage.getItem('storedFEN');
     const correctPGN = localStorage.getItem('correctMoves');
     const remainingPGN = localStorage.getItem('remainingMoves');
@@ -75,14 +77,13 @@ export default function HomePage() {
     const round = localStorage.getItem('round');
     const board = localStorage.getItem('board');
     const notes = localStorage.getItem('notes');
-  
+
+    const savedImage = await get('saved-image'); // Load image from IndexedDB
+    if (savedImage) setImage(savedImage);        // Restore to state
+
     if (storedFEN) setLastValidFEN(storedFEN);
     if (correctPGN || remainingPGN) setEditFields([correctPGN || '', remainingPGN || '']);
 
-    if (correctPGN || remainingPGN) {
-      setEditFields([correctPGN || '', remainingPGN || '']);
-    }
-    
     if (
       blackPlayer || whitePlayer || blackRating || whiteRating || board || round || notes
     ) {
@@ -95,11 +96,13 @@ export default function HomePage() {
         round: round || '',
         correctPGN: '',
         remainingPGN: '',
-        notes : ''
+        notes: ''
       });
     }
-    
-  }, []);
+  };
+
+  loadSavedData();
+}, []);
   
   useEffect(() => {
     localStorage.setItem('storedFEN', lastValidFEN);
@@ -379,11 +382,14 @@ const handleSubmit = async () => {
 };
 
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setImage(e.target.files[0]);
-    }
-  };
+const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  if (e.target.files && e.target.files.length > 0) {
+    const file = e.target.files[0];
+
+    setImage(file);            // Store in React state
+    await set('saved-image', file); // Store in IndexedDB
+  }
+};
 
   
 

@@ -23,6 +23,7 @@ export default function GameSaveModal({ onClose, imageFile, gameInfo }: GameSave
 
   const handleSave = async () => {
     const token = localStorage.getItem('id_token');
+    console.log("Image file:", imageFile);
     if (!token || !imageFile) {
       alert('Missing token or image');
       return;
