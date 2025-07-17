@@ -322,13 +322,14 @@ const handleSubmit = async () => {
   setLoading(true);
 
   try {
-    const response = await fetch(process.env.NEXT_PUBLIC_THINKMOVES_API!, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      body: formData,
-    });
+const response = await fetch('https://sjmpwxhxms.us-east-1.awsapprunner.com/api/ThinkMoves/ThinkMovesGPT', {
+  method: 'POST',
+  headers: {
+    Authorization: `Bearer ${token}`,
+  },
+  body: formData,
+});
+
 
     const rawText = await response.text();
 

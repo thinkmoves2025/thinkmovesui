@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import axios from 'axios';
 
+
 interface GameSaveModalProps {
   onClose: () => void;
   imageFile: File | null;
@@ -21,39 +22,50 @@ interface GameSaveModalProps {
 export default function GameSaveModal({ onClose, imageFile, gameInfo }: GameSaveModalProps) {
   const [notes, setNotes] = useState('');
 
-  const handleSave = async () => {
-    const token = localStorage.getItem('id_token');
-    console.log("Image file:", imageFile);
-    if (!token || !imageFile) {
-      alert('Missing token or image');
-      return;
-    }
+const handleSave = async () => {
+  const token = localStorage.getItem('id_token');
+  if (!token) {
+    alert('Missing token');
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append('correctMoves', gameInfo.correctPGN);
-    formData.append('remainingMoves', gameInfo.remainingPGN);
-    formData.append('bpName', gameInfo.blackPlayer);
-    formData.append('blackRating', gameInfo.blackRating);
-    formData.append('wpName', gameInfo.whitePlayer);
-    formData.append('whiteRating', gameInfo.whiteRating);
-    formData.append('board', gameInfo.board);
-    formData.append('round', gameInfo.round);
-    formData.append('notes', notes);
+  const formData = new FormData();
+  formData.append('correctMoves', gameInfo.correctPGN);
+  formData.append('remainingMoves', gameInfo.remainingPGN);
+  formData.append('bpName', gameInfo.blackPlayer);
+  formData.append('blackRating', gameInfo.blackRating);
+  formData.append('wpName', gameInfo.whitePlayer);
+  formData.append('whiteRating', gameInfo.whiteRating);
+  formData.append('board', gameInfo.board);
+  formData.append('round', gameInfo.round);
+  formData.append('notes', notes);
+
+  if (imageFile) {
     formData.append('gameImages', imageFile);
+  }
 
-    try {
-      await axios.post('https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Game/SaveGame', formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      alert('Game saved!');
-      onClose();
-    } catch (err) {
-      console.error('Save failed:', err);
-      alert('Error saving game');
-    }
-  };
+  try {
+    await axios.post('https://sjmpwxhxms.us-east-1.awsapprunner.com/api/Game/SaveGame', formData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    alert('Game saved!');
+    onClose();
+ } catch (err) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const error = err as any;
+  console.error('Save failed:', {
+    message: error.message,
+    status: error.response?.status,
+    data: error.response?.data,
+  });
+  alert('Error saving game');
+}
+
+
+};
+
 
   return (
     <div style={{

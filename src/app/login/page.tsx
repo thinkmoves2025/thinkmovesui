@@ -19,6 +19,7 @@ export default function LoginPage() {
     }
   };
 
+// Updated ThinkMoves Landing Page React Component
 return (
   <main
     style={{
@@ -29,71 +30,68 @@ return (
       borderTop: '1px solid #e5e7eb',
     }}
   >
-
     <style>
-  {`
-    .top-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      position: relative;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
+      {`
+        .top-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          position: relative;
+          justify-content: center;
+          align-items: center;
+          margin-bottom: 2rem;
+        }
 
-    @media (min-width: 768px) {
-      .top-buttons {
-        position: absolute;
-        top: 1.5rem;
-        right: 2rem;
-        flex-direction: row;
-        justify-content: flex-end;
-        align-items: center;
-        margin-bottom: 0;
-      }
-    }
+        @media (min-width: 768px) {
+          .top-buttons {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            flex-direction: row;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 0;
+          }
+        }
 
-    .top-button {
-      padding: 10px 20px;
-      font-size: 0.95rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-      width: 220px;
-      max-width: 90%;
-      text-align: center;
-    }
+        .top-button {
+          padding: 10px 20px;
+          font-size: 0.95rem;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+          width: 220px;
+          max-width: 90%;
+          text-align: center;
+        }
 
-    .get-started {
-      background-color: #3b82f6;
-      color: #fff;
-    }
+        .get-started {
+          background-color: #3b82f6;
+          color: #fff;
+        }
 
-    .download-sheets {
-      background-color: #10b981;
-      color: #fff;
-      text-decoration: none;
-    }
-  `}
-</style>
-
+        .download-sheets {
+          background-color: #10b981;
+          color: #fff;
+          text-decoration: none;
+        }
+      `}
+    </style>
 
     {/* Top-right buttons */}
-{/* Top Buttons – Responsive */}
-<div className="top-buttons">
-  <button onClick={handleLogin} className="top-button get-started">
-    Get Started Free
-  </button>
-  <a
-    href="/downloads/ThinkMovesEmpty.zip"
-    download
-    className="top-button download-sheets"
-  >
-    Download Blank Sheets
-  </a>
-</div>
+    <div className="top-buttons">
+      <button onClick={handleLogin} className="top-button get-started">
+        Get Started Free
+      </button>
+      <a
+        href="/downloads/ThinkMovesEmpty.zip"
+        download
+        className="top-button download-sheets"
+      >
+        Download Blank Sheets
+      </a>
+    </div>
 
     <div style={{ maxWidth: '1000px', margin: '0 auto', textAlign: 'center' }}>
       {/* App Name */}
@@ -101,13 +99,12 @@ return (
         ThinkMoves
       </h1>
 
-      {/* Punchline */}
-      <h2 style={{ fontSize: '1.8rem', marginBottom: '1rem', color: '#1f2937' }}>
-        Digitize Your Chess Scoresheets with Ease
+      {/* Why ThinkMoves Section */}
+      <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1f2937' }}>
+        Why ThinkMoves?
       </h2>
       <p style={{ fontSize: '1.1rem', color: '#4b5563', marginBottom: '2rem' }}>
-        ThinkMoves converts your paper scoresheets into smart, editable digital games.
-        Validate moves, correct errors, and save your PGN — all in one place.
+        Most chess players still record their games on paper — but reviewing them later is slow, error-prone, and tedious. ThinkMoves turns any scanned scoresheet into a structured, editable PGN with move validation, corrections, and easy sharing.
       </p>
 
       {/* Step-by-step flow with arrows */}
@@ -151,75 +148,71 @@ return (
         ))}
       </div>
 
-<div style={{ textAlign: 'center', marginTop: '3rem' }}>
-  <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>
-    Blank Scoresheets Preview
-  </h2>
+      {/* Blank Scoresheet Preview */}
+      <div style={{ textAlign: 'center', marginTop: '3rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem' }}>
+          Blank Scoresheets Preview
+        </h2>
 
-  {/* Image Previews in Grid */}
-  <div style={{
-  display: 'flex',
-  justifyContent: 'center',
-  flexWrap: 'wrap',
-  gap: '2rem',
-  marginBottom: '2rem'
-}}>
-  <div style={{ maxWidth: '400px', borderRadius: '10px', overflow: 'hidden' }}>
-<Image
-  src="/ThinkMoves_empty/ThinkMovesFront.jpg"
-  alt="Back Scoresheet"
-  width={400}
-  height={565}
-/>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          gap: '2rem',
+          marginBottom: '2rem'
+        }}>
+          <div style={{ maxWidth: '400px', borderRadius: '10px', overflow: 'hidden' }}>
+            <Image src="/ThinkMoves_empty/ThinkMovesFront.jpg" alt="Front Scoresheet" width={400} height={565} />
+          </div>
 
-  </div>
+          <Image src="/ThinkMoves_empty/ThinkMovesBack.jpg" alt="Back Scoresheet" width={400} height={565} />
+        </div>
 
-<Image
-  src="/ThinkMoves_empty/ThinkMovesBack.jpg"
-  alt="Back Scoresheet"
-  width={400}
-  height={565}
-/>
+        <a
+          href="/downloads/ThinkMovesEmpty.zip"
+          download
+          style={{
+            backgroundColor: '#10b981',
+            color: '#fff',
+            padding: '12px 24px',
+            borderRadius: '8px',
+            fontSize: '1rem',
+            textDecoration: 'none',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+          }}
+        >
+          Download Blank Sheets
+        </a>
+      </div>
 
-</div>
+      {/* Coming Soon Section */}
+      <div style={{ marginTop: '4rem', padding: '2rem', background: '#f0fdf4', borderRadius: '12px' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#047857', marginBottom: '1rem' }}>
+          Coming Soon to ThinkMoves
+        </h2>
+        <ul style={{ listStyle: 'none', padding: 0, color: '#065f46', fontSize: '1rem' }}>
+          <li>🕰️ Bluetooth Chess Clock Integration</li>
+          <li>📊 Game Insights and Accuracy Scoring</li>
+          <li>📱 Mobile App for On-the-Go Uploads</li>
+          <li>📖 Custom Printable Scorebooks</li>
+        </ul>
+      </div>
 
-
-<a
-  href="/downloads/ThinkMovesEmpty.zip"
-  download
-  style={{
-    backgroundColor: '#10b981',
-    color: '#fff',
-    padding: '12px 24px',
-    borderRadius: '8px',
-    fontSize: '1rem',
-    textDecoration: 'none',
-    boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-  }}
->
-  Download Blank Sheets
-</a>
-
-<br /><br />
-</div>
-
-
-      <p style={{ fontSize: '0.9rem', color: '#6b7280', marginTop: '0.5rem' }}>
+      <p style={{ fontSize: '0.9rem', color: '#6b7280', marginTop: '2rem' }}>
         No credit card needed. Just upload and play.
       </p>
 
-      {/* Trust note */}
-      <div style={{ marginTop: '2.5rem', fontSize: '0.9rem', color: '#4b5563' }}>
+      <div style={{ marginTop: '2rem', fontSize: '0.9rem', color: '#4b5563' }}>
         🔒 <strong>Private and Secure:</strong> Your games are saved safely. No spam. No ads.
       </div>
 
-      {/* Footer */}
-      <footer style={{ marginTop: '4rem', fontSize: '0.8rem', color: '#9ca3af' }}>
+      <footer style={{ marginTop: '3rem', fontSize: '0.8rem', color: '#9ca3af' }}>
         © 2025 ThinkMoves. All rights reserved.
       </footer>
     </div>
   </main>
 );
+
 
 
 }
