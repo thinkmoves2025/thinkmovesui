@@ -121,6 +121,64 @@ export default function ProfilePage() {
       >
         Logout
       </button>
+
+<br /><br />
+      {/* Gameplay Insights */}
+<div
+  style={{
+    backgroundColor: '#f9fafb',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    padding: '1.5rem',
+    marginBottom: '2rem',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+  }}
+>
+  <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1f2937' }}>
+    ♟️ Gameplay Insights
+  </h2>
+  <ul style={{ listStyle: 'none', padding: 0, margin: 0, lineHeight: '1.8', fontSize: '1rem', color: '#374151' }}>
+    <li><strong>📘 Most Played Opening:</strong> Sicilian Defense (B20)</li>
+    <li><strong>📊 Win/Loss/Draw:</strong> 3 Wins | 2 Losses | 2 Draws</li>
+    <li><strong>⚪ Win Rate as White:</strong> 60% (3/5)</li>
+    <li><strong>⚫ Win Rate as Black:</strong> 33% (1/3)</li>
+    <li><strong>📏 Avg. Game Length:</strong> 32 moves</li>
+  </ul>
+</div>
+
+{/* Advanced Stats */}
+<div
+  style={{
+    backgroundColor: '#f9fafb',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    padding: '1.5rem',
+    marginBottom: '2rem',
+    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+  }}
+>
+  <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: '#1f2937' }}>
+    📈 Advanced Stats
+  </h2>
+  <ul style={{ listStyle: 'none', padding: 0, margin: 0, lineHeight: '1.8', fontSize: '1rem', color: '#374151' }}>
+    <li><strong>🔍 Blunders per Game:</strong> 1.6</li>
+    <li><strong>💯 Best Game Accuracy:</strong> 92%</li>
+    <li><strong>❗ Game Mistake Summary:</strong> Blunders: 5 | Mistakes: 8 | Inaccuracies: 12</li>
+
+    <li><strong>⏱️ Rapid Win Rate:</strong> 55%</li>
+    <li><strong>⚡ Blitz Win Rate:</strong> 40%</li>
+    <li><strong>🔥 Bullet Win Rate:</strong> 20%</li>
+
+    <li><strong>📘 Opening Stats:</strong> Sicilian (65% win) | French (20% win)</li>
+
+    <li><strong>🏁 Endgame Conversion:</strong> Won: 70% | Drawn: 20% | Lost: 10%</li>
+
+    <li><strong>📊 Game Quality Trend:</strong> Accuracy ↑ 12% over last 10 games</li>
+
+    <li><strong>🌐 Opening Diversity:</strong> 4 as White | 2 as Black</li>
+  </ul>
+</div>
+
     </main>
   );
 }
